@@ -1,0 +1,1 @@
+export type Category='미국'|'한국'|'글로벌'|'기술'|'원자재';export type Article={id:string;title:string;category:Category;summary:string;source:string;publishedAt:string;url?:string;content?:string};export type Report={period:'daily'|'weekly'|'monthly';generatedAt:string;summary:string;categories:{name:string;count:number}[];highlights:Article[]};
