@@ -1,0 +1,1 @@
+import assert from 'node:assert/strict';import test from 'node:test';import { summarize } from '../services/summarizer.js';test('summarizer returns at most three sentences',()=>{assert.equal(summarize('A. B. C. D.'),'A. B. C.')});test('empty body has fallback',()=>{assert.match(summarize('   '),/본문/)})
