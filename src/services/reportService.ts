@@ -1,0 +1,1 @@
+export type MarketReport={title:string;summary:string;highlights:string[]};export async function getWeeklyReport():Promise<MarketReport>{return{title:'이번 주 시장 한눈에',summary:'금리 정책과 AI 투자 기대가 시장을 주도했습니다. 기술주와 원자재 시장의 움직임을 함께 확인하세요.',highlights:['중앙은행 정책 발언','AI·반도체 투자 흐름','중국 경기 부양책','국제 유가 움직임']}}
