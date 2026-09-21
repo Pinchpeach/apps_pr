@@ -1,17 +1,29 @@
-name: Validate Expo app
+name: Validate app
 on:
   push:
     branches: [main]
   workflow_dispatch:
 jobs:
-  validate:
+  frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
       - run: npm install
       - run: npx tsc --noEmit
       - run: npx expo export --platform web
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - working-directory: server
+        run: npm install
+      - working-directory: server
+        run: npm run typecheck
+      - working-directory: server
+        run: npm test
