@@ -1,0 +1,2 @@
+import { DatasetRow } from './types.js';import { Predictor } from './model.js';
+export function metrics(rows:DatasetRow[],predict:Predictor){let tp=0,tn=0,fp=0,fn=0;for(const r of rows){const p=predict(r.features);if(p===1&&r.label===1)tp++;else if(p===0&&r.label===0)tn++;else if(p===1)fp++;else fn++}const safe=(a:number,b:number)=>b?a/b:0,accuracy=safe(tp+tn,rows.length),precision=safe(tp,tp+fp),recall=safe(tp,tp+fn),f1=safe(2*precision*recall,precision+recall);return{accuracy,precision,recall,f1}}
