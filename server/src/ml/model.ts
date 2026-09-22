@@ -1,0 +1,6 @@
+import { DatasetRow,ModelName } from './types.js';
+export type Predictor=(x:number[])=>number;
+const sigmoid=(z:number)=>1/(1+Math.exp(-Math.max(-30,Math.min(30,z))));
+function logistic(rows:DatasetRow[]):Predictor{const d=rows[0]?.features.length??0,w=Array(d).fill(0);let b=0;for(let e=0;e<350;e++){const gw=Array(d).fill(0);let gb=0;for(const row of rows){const p=sigmoid(row.features.reduce((s,x,j)=>s+x*w[j],b)),err=p-row.label;gb+=err;for(let j=0;j<d;j++)gw[j]+=err*row.features[j]}const lr=.35/rows.length;b-=lr*gb;for(let j=0;j<d;j++)w[j]-=lr*gw[j]}return x=>sigmoid(x.reduce((s,v,j)=>s+v*w[j],b))>=.5?1:0}
+function centroid(rows:DatasetRow[]):Predictor{const d=rows[0]?.features.length??0,s=[Array(d).fill(0),Array(d).fill(0)],n=[0,0];for(const r of rows){n[r.label]++;r.features.forEach((v,j)=>s[r.label][j]+=v)}const c=s.map((v,k)=>v.map(x=>x/Math.max(1,n[k])));return x=>{const dist=(k:number)=>x.reduce((a,v,j)=>a+(v-c[k][j])**2,0);return dist(1)<dist(0)?1:0}}
+export function trainModel(name:ModelName,rows:DatasetRow[]){if(!rows.length)throw new Error('empty_dataset');return name==='centroid'?centroid(rows):logistic(rows)}
