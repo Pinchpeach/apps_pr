@@ -1,0 +1,1 @@
+export type DatasetRow={features:number[];label:number};export type ModelName='logistic'|'centroid';export type MlRun={id:string;model:ModelName;status:'completed';samples:number;features:number;trainSamples:number;testSamples:number;accuracy:number;precision:number;recall:number;f1:number;createdAt:string};

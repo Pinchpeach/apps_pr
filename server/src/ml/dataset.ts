@@ -1,0 +1,4 @@
+import { DatasetRow } from './types.js';
+const rand=(seed:number)=>{let x=seed>>>0;return()=>((x=(1664525*x+1013904223)>>>0)/4294967296)};
+export function makeDemoDataset(size=240,seed=42):DatasetRow[]{const r=rand(seed);return Array.from({length:size},()=>{const a=r()*2-1,b=r()*2-1,noise=(r()-.5)*.35;return{features:[a,b],label:a*.9+b*.65+noise>0?1:0}})}
+export function split(rows:DatasetRow[],ratio=.8,seed=7){const r=rand(seed),copy=[...rows];for(let i=copy.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]]}const n=Math.max(1,Math.min(copy.length-1,Math.floor(copy.length*ratio)));return{train:copy.slice(0,n),test:copy.slice(n)}}

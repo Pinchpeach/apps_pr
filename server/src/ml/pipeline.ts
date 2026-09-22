@@ -1,0 +1,4 @@
+import { makeDemoDataset,split } from './dataset.js';import { metrics } from './metrics.js';import { trainModel } from './model.js';import { MlRun,ModelName } from './types.js';
+const runs:MlRun[]=[];
+export function runPipeline(input:{model?:ModelName;size?:number;seed?:number}={}):MlRun{const model=input.model??'logistic',size=Math.max(60,Math.min(5000,input.size??240)),rows=makeDemoDataset(size,input.seed??42),{train,test}=split(rows,.8,(input.seed??42)+1),predict=trainModel(model,train),m=metrics(test,predict);const run:MlRun={id:crypto.randomUUID(),model,status:'completed',samples:rows.length,features:rows[0].features.length,trainSamples:train.length,testSamples:test.length,...m,createdAt:new Date().toISOString()};runs.unshift(run);runs.splice(20);return run}
+export function listRuns(){return runs}
