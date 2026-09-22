@@ -14,3 +14,7 @@ export type DemoUpload={id:string;name:string;mime:string;size:number;createdAt:
 export async function listUploads():Promise<DemoUpload[]>{return json(await authFetch('/demo/uploads'))}
 export async function uploadFile(file:{name:string;mime:string;size:number;data:string}):Promise<DemoUpload>{return json(await authFetch('/demo/uploads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(file)}))}
 export async function deleteUpload(id:string){return json(await authFetch('/demo/uploads/'+encodeURIComponent(id),{method:'DELETE'}))}
+
+export type RealtimeEvent={id:string;message:string;time:string};
+export async function sendRealtimeEvent(message:string):Promise<RealtimeEvent>{return json(await authFetch('/demo/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message})}))}
+export async function realtimeEventUrl(){const s=await import('./authService').then(x=>x.getSession());return{url:(process.env.EXPO_PUBLIC_API_URL??'http://localhost:3000')+'/demo/events',token:s?.accessToken??''}}
