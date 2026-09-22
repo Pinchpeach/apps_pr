@@ -9,3 +9,8 @@ export async function apiHealth(){return json(await fetch((process.env.EXPO_PUBL
 
 export type InspectResult={method:string;received:any;requestId:string;serverTime:string;latencyHint:string};
 export async function inspectApi(payload:any):Promise<InspectResult>{return json(await authFetch('/demo/inspect',{method:'POST',headers:{'Content-Type':'application/json','X-Portfolio-Demo':'api-inspector'},body:JSON.stringify(payload)}))}
+
+export type DemoUpload={id:string;name:string;mime:string;size:number;createdAt:string};
+export async function listUploads():Promise<DemoUpload[]>{return json(await authFetch('/demo/uploads'))}
+export async function uploadFile(file:{name:string;mime:string;size:number;data:string}):Promise<DemoUpload>{return json(await authFetch('/demo/uploads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(file)}))}
+export async function deleteUpload(id:string){return json(await authFetch('/demo/uploads/'+encodeURIComponent(id),{method:'DELETE'}))}
