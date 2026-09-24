@@ -89,3 +89,13 @@ https://www.notion.so/1e515d0ec6cf4b95a3e1a6844e0dbfc9
 - The imported material is user-authored Notion content; the import does not independently verify its financial claims. The original Notion page and reference source remain linked in each detail view.
 
 The bundled snapshot is the source for a new local database too: pulling this change and starting the API is enough to populate the archive.
+
+### For simple test
+#### ./server
+- npm.cmd install
+- docker compose -f ..\docker-compose.yml up -d --wait postgres
+- npm.cmd run dev
+
+#### /root
+- npm.cmd install
+- npm.cmd run web
