@@ -34,6 +34,21 @@ try {
   const health = await fetch(base + '/health', { headers: { Origin: origin } });
   assert.equal(health.status, 200);
   assert.equal((await health.json()).ok, true);
+  const archive = (await (await fetch(base + '/news')).json()).filter(x => x.briefing);
+  assert.equal(archive.length, 7);
+  const detail = await (await fetch(base + '/news/' + archive[0].id)).json();
+  assert.ok(detail.content.length > 1000);
+  assert.ok(detail.briefing.blocks.length > 5);
+  assert.equal(detail.briefing.date, '2026-09-24');
+  assert.match(detail.briefing.notionUrl, /notion.so/);
+  const filtered = await (await fetch(base + '/news?category=' + encodeURIComponent('한국'))).json();
+  assert.equal(filtered.filter(x => x.briefing).length, 7);
+  const weekly = await (await fetch(base + '/reports/weekly')).json();
+  assert.equal(weekly.highlights.length, 1);
+  assert.equal(weekly.highlights[0].briefing.period, 'weekly');
+  const monthly = await (await fetch(base + '/reports/monthly')).json();
+  assert.equal(monthly.highlights.length, 0);
+  assert.match(monthly.summary, /없습니다/);
   for (const path of ['/auth/register', '/auth/login']) {
     const preflight = await fetch(base + path, { method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' } });
     assert.equal(preflight.status, 204);
@@ -55,13 +70,17 @@ try {
   assert.equal(loggedIn.status, 200);
   const login = await loggedIn.json();
   assert.ok(login.accessToken && login.refreshToken);
+  const saved = await fetch(base + '/saved/' + detail.id, { method: 'POST', headers: { Authorization: `Bearer ${login.accessToken}` } });
+  assert.equal(saved.status, 201);
+  const savedItems = await (await fetch(base + '/saved', { headers: { Authorization: `Bearer ${login.accessToken}` } })).json();
+  assert.equal(savedItems[0].id, detail.id);
   const tasks = await fetch(base + '/demo/tasks', { headers: { Authorization: `Bearer ${login.accessToken}`, Origin: origin } });
   assert.equal(tasks.status, 200);
   assert.ok(Array.isArray(await tasks.json()));
   assert.equal((await post('/auth/refresh', { refreshToken: login.refreshToken })).status, 200);
   assert.equal((await post('/auth/logout', { refreshToken: session.refreshToken })).status, 204);
   assert.equal((await post('/auth/refresh', { refreshToken: session.refreshToken })).status, 401);
-  console.log('PASS: PostgreSQL-backed health, CORS preflight/denied origin, register, duplicate, login, invalid password, protected API, refresh and logout');
+  console.log('PASS: Notion archive 7 rows, full body, region filter, weekly/monthly reports, saved briefing; PostgreSQL health, CORS, authentication, refresh and logout');
 } finally {
   child.kill();
   await exited;

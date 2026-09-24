@@ -74,3 +74,18 @@ configured database, checks real HTTP/CORS and authentication flows, and removes
 user. Use a disposable local/test database. CI runs it against PostgreSQL 16.
 
 Open **Playground** from the dashboard to explore the portfolio-oriented feature demonstrations.
+
+## Notion briefing archive (snapshot import)
+
+The site includes the snapshot retrieved on 2026-09-24 from **글로벌 경제 브리핑 → 경제 브리핑 아카이브**:
+https://www.notion.so/1e515d0ec6cf4b95a3e1a6844e0dbfc9
+
+- 7 pages: 6 daily briefings and 1 weekly report, dated September 19–24. No monthly report exists in this snapshot.
+- Titles, original summaries, full text/tables, dates, regions, sectors and source URLs are preserved in `server/data/notion-briefings.json`.
+- API startup inserts missing pages into PostgreSQL before accepting requests. Stable Notion page IDs prevent duplicates and preserve saved references; existing records are not overwritten on restart.
+- News, search, regional/sector filters, calendar, saved items and report tabs use those database records. Reports follow the original Notion type and display their original publication date.
+- This is a **one-time snapshot, not automatic synchronization**. No Notion token is required. New or edited Notion pages will not appear until a fresh snapshot is imported.
+- To reapply a refreshed snapshot (including updates to existing pages), run `npm run import:notion` from `server` while PostgreSQL is running. This does not delete other articles or Notion pages missing from the snapshot.
+- The imported material is user-authored Notion content; the import does not independently verify its financial claims. The original Notion page and reference source remain linked in each detail view.
+
+The bundled snapshot is the source for a new local database too: pulling this change and starting the API is enough to populate the archive.
