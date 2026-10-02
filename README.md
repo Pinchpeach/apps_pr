@@ -99,3 +99,23 @@ The bundled snapshot is the source for a new local database too: pulling this ch
 #### /root
 - npm.cmd install
 - npm.cmd run web
+
+## Android / Google Play release
+
+The Expo project is also the standalone Android app; it does not use a WebView wrapper.
+The Android application ID is `com.pinchpeach.marketinsight`. Production builds are Android App Bundles (AAB), while preview builds are installable APKs.
+
+Before a production build, deploy the Node API and PostgreSQL behind HTTPS and set `EXPO_PUBLIC_API_URL` to that public API origin in the EAS production environment. Never embed `AUTH_SECRET`, `DATABASE_URL`, Notion credentials, or provider secrets in the mobile app. Android cleartext HTTP is disabled for release safety.
+
+Install the EAS CLI and authenticate once, then run:
+
+```bash
+npm install
+npm run check:android
+npm run android:preview   # installable APK for device testing
+npm run android:release   # Play Store AAB
+```
+
+The first EAS Android build can create the signing keystore when prompted. Keep Play App Signing enabled in Play Console. Incremented Android version codes are handled by the production EAS profile.
+
+Before store submission, test authentication, dashboard, Playground, saved items, calendar, reports, API failure/offline states, and logout on at least one physical Android device. Store listing assets, privacy policy URL, Data safety declarations, content rating, target-audience answers, and Play Console account verification remain publishing/account tasks rather than source-code settings.
