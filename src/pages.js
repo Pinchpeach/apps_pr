@@ -2,6 +2,9 @@ import { calculator, money, number, date, segmented, select, checkbox, table } f
 import { calcSalary, RATES } from './calc/salary.js';
 import { MIN_WAGE } from './calc/wage.js';
 import { calcSavings } from './calc/savings.js';
+import { calcAcquisitionTax } from './calc/acquisition.js';
+import { BENEFIT } from './calc/unemployment.js';
+import { BASE_RATE, legalConversionCap } from './calc/rent.js';
 
 const won = (n) => `${Math.round(n).toLocaleString('ko-KR')}원`;
 
@@ -13,7 +16,16 @@ const SRC = {
   moel: ['고용노동부 — 퇴직금 계산', 'https://www.moel.go.kr/retirementpayCal.do'],
   minWage: ['최저임금위원회 — 2026년 적용 최저임금', 'https://www.minimumwage.go.kr'],
   brokerage: ['공인중개사법 시행규칙 [별표 1] 주택 중개보수 요율', 'https://www.law.go.kr/법령/공인중개사법시행규칙'],
+  acquisition: ['지방세법 제11조(부동산 취득의 세율)', 'https://www.law.go.kr/법령/지방세법'],
+  firstHome: ['지방세특례제한법 제36조의3(생애최초 주택 구입 감면)', 'https://www.law.go.kr/법령/지방세특례제한법'],
+  wetax: ['위택스 — 취득세 계산', 'https://www.wetax.go.kr'],
+  benefit: ['고용24 — 구직급여 모의계산', 'https://www.work24.go.kr'],
+  bok: ['한국은행 — 기준금리 추이', 'https://www.bok.or.kr/portal/singl/baseRate/list.do?dataSeCd=01&menuNo=200643'],
+  leaseAct: ['주택임대차보호법 제7조의2', 'https://www.law.go.kr/법령/주택임대차보호법'],
+  vat: ['국세청 — 부가가치세 안내', 'https://www.nts.go.kr'],
 };
+
+const pct = (r, digits = 2) => `${Number((r * 100).toFixed(digits))}%`;
 
 /** @typedef {{slug:string, title:string, h1:string, description:string, category:string, icon:string, script?:string, body:string, article:string, faq?:[string,string][], sources?:[string,string][], updated:string}} Page */
 
@@ -288,6 +300,149 @@ ${[
 <p>목표일 당일이 D-Day, 하루 전이 D-1, 하루 뒤가 D+1입니다. 사귄 날·태어난 날처럼 <strong>첫날을 1일로 세는 기념일</strong>은 기준일 + (N − 1)일이 N일째가 됩니다.
 예를 들어 2026년 1월 1일에 시작했다면 100일째는 4월 10일입니다.</p>`,
     faq: [['100일은 99일 뒤인가요, 100일 뒤인가요?', '연애·출생 기념일처럼 시작일을 1일로 세면 99일 뒤가 100일째입니다. 계약 기간처럼 시작일 다음 날부터 세면 100일 뒤입니다.']],
+  },
+  {
+    slug: 'acquisition-tax',
+    category: '부동산',
+    icon: '🧾',
+    title: '취득세 계산기 2026 — 주택 매매 취득세·지방교육세·농특세',
+    h1: '주택 취득세 계산기',
+    description:
+      '주택 매매가와 보유 주택 수, 조정대상지역 여부를 입력하면 2026년 취득세율(1~3%, 다주택 8·12% 중과)과 지방교육세·농어촌특별세, 생애최초 감면까지 계산합니다.',
+    script: 'acquisition',
+    updated: '2026-10-19',
+    body: calculator([
+      money('price', '취득가액 (매매가)', '700,000,000'),
+      select('houses', '취득 후 보유 주택 수', [['1', '1주택'], ['2', '2주택'], ['3', '3주택'], ['4', '4주택 이상']], '1'),
+      checkbox('regulated', '조정대상지역 주택'),
+      checkbox('over85', '전용면적 85㎡ 초과'),
+      checkbox('firstHome', '생애최초 주택 구입 (12억원 이하, 최대 200만원 감면)'),
+    ]),
+    article: `
+<h2>2026년 주택 취득세율 (개인, 유상취득)</h2>
+${table(
+  ['취득가액', '취득세', '지방교육세', '농특세(85㎡ 초과)', '합계 (85㎡ 이하 / 초과)'],
+  [
+    ['6억원 이하', '1%', '0.1%', '0.2%', '1.1% / 1.3%'],
+    ['6억~9억원', '1.01~2.99%', '취득세율의 1/10', '0.2%', `예: 7억 ${pct(calcAcquisitionTax({ price: 700_000_000 }).effectiveRate)}`],
+    ['9억원 초과', '3%', '0.3%', '0.2%', '3.3% / 3.5%'],
+    ['중과 8%', '8%', '0.4%', '0.6%', '8.4% / 9.0%'],
+    ['중과 12%', '12%', '0.4%', '1.0%', '12.4% / 13.4%'],
+  ],
+)}
+<p>6억~9억원 구간 세율 = (취득가액 × 2/3억원 − 3) ÷ 100이며 소수점 다섯째 자리에서 반올림합니다. 7억 5천만원이면 정확히 2%입니다.</p>
+<h2>다주택 중과 기준</h2>
+<ul>
+  <li><strong>조정대상지역</strong>: 2주택 8%, 3주택 이상 12%</li>
+  <li><strong>비조정대상지역</strong>: 2주택까지 1~3%, 3주택 8%, 4주택 이상 12%</li>
+  <li>일시적 2주택(기존 주택을 기한 안에 처분)은 1~3% 기본세율이 적용됩니다. 이 계산기에서는 1주택으로 입력하면 됩니다.</li>
+</ul>
+<h2>생애최초 감면</h2>
+<p>본인과 배우자가 주택을 소유한 적이 없고 취득가액 12억원 이하 주택을 사면 취득세를 최대 200만원까지 감면합니다(지방세특례제한법 제36조의3, 2028년 12월 31일까지).
+2026년 8월 발표된 지방세제 개편안에는 40세 미만 청년의 한도를 300만원으로 늘리는 내용이 있지만 아직 확정되지 않아 반영하지 않았습니다.</p>`,
+    faq: [
+      ['7억 아파트 취득세는 얼마인가요?', `1주택·85㎡ 이하 기준 취득세 ${won(calcAcquisitionTax({ price: 700_000_000 }).acquisition)}, 지방교육세를 더하면 ${won(calcAcquisitionTax({ price: 700_000_000 }).total)}입니다.`],
+      ['취득세는 언제 내나요?', '잔금일(취득일)로부터 60일 이내에 신고·납부해야 합니다. 기한을 넘기면 가산세가 붙습니다.'],
+      ['오피스텔도 같은 세율인가요?', '아닙니다. 오피스텔은 주택이 아닌 건물로 보아 취득세 4%에 지방교육세·농특세를 더한 4.6%가 적용됩니다.'],
+    ],
+    sources: [SRC.acquisition, SRC.firstHome, SRC.wetax],
+  },
+  {
+    slug: 'rent-conversion',
+    category: '부동산',
+    icon: '🔁',
+    title: '전월세 전환 계산기 — 전세 월세 전환율, 법정 상한 2026',
+    h1: '전월세 전환 계산기',
+    description: `전세를 월세로, 월세를 전세로 바꿀 때 적정 금액을 계산합니다. 기준금리 ${pct(BASE_RATE.rate)}(${BASE_RATE.since}) 기준 법정 전환율 상한 ${pct(legalConversionCap())}을 기본값으로 사용합니다.`,
+    script: 'rent',
+    updated: '2026-10-19',
+    body: calculator([
+      segmented('mode', '계산 방향', [['toMonthly', '전세 → 월세'], ['toJeonse', '월세 → 전세'], ['rate', '전환율 확인']], 'toMonthly'),
+      money('jeonse', '전세 보증금', '300,000,000'),
+      money('deposit', '월세 보증금', '50,000,000'),
+      money('monthly', '월세', '1,000,000', { hidden: true }),
+      number('rate', '전환율', Number((legalConversionCap() * 100).toFixed(2)), '%', {
+        step: 0.01,
+        hint: `법정 상한: 기준금리 ${pct(BASE_RATE.rate)} + 2% = ${pct(legalConversionCap())}`,
+      }),
+    ]),
+    article: `
+<h2>전월세 전환율이란</h2>
+<p>보증금 일부를 월세로 바꿀 때 적용하는 연 이율입니다. <strong>월세 = (전세 보증금 − 월세 보증금) × 전환율 ÷ 12</strong>로 계산합니다.</p>
+<h2>법정 상한</h2>
+<p>주택임대차보호법 제7조의2에 따라 계약 기간 중이나 계약갱신 때 보증금을 월세로 바꾸는 경우 전환율은 <strong>연 10%와 한국은행 기준금리 + 2% 중 낮은 값</strong>을 넘을 수 없습니다.
+${BASE_RATE.since}부터 기준금리가 ${pct(BASE_RATE.rate)}이므로 현재 상한은 <strong>${pct(legalConversionCap())}</strong>입니다.</p>
+<p>신규 계약은 법정 상한이 적용되지 않아 당사자 합의로 정합니다.</p>`,
+    faq: [
+      ['전세 3억을 보증금 5천에 월세로 바꾸면 얼마인가요?', `전환율 ${pct(legalConversionCap())} 기준 월 ${won((250_000_000 * legalConversionCap()) / 12)}입니다.`],
+      ['집주인이 상한보다 높은 월세를 요구하면?', '계약 기간 중 전환이나 계약갱신 때 상한을 넘는 부분은 효력이 없습니다. 주택임대차분쟁조정위원회에 조정을 신청할 수 있습니다.'],
+    ],
+    sources: [SRC.leaseAct, SRC.bok],
+  },
+  {
+    slug: 'unemployment',
+    category: '급여·세금',
+    icon: '🧭',
+    title: '실업급여 계산기 2026 — 구직급여 일액·지급일수·총액',
+    h1: '실업급여 계산기',
+    description: `퇴직 전 3개월 급여와 나이, 고용보험 가입기간을 입력하면 2026년 구직급여 일액(상한 ${BENEFIT.maxDaily.toLocaleString('ko-KR')}원)과 소정급여일수, 예상 총액을 계산합니다.`,
+    script: 'unemployment',
+    updated: '2026-10-19',
+    body: calculator([
+      money('wages3m', '퇴직 전 3개월 급여 총액 (세전)', '9,000,000'),
+      number('insuredYears', '고용보험 가입기간', 3, '년', { step: 0.5 }),
+      number('dailyHours', '1일 소정근로시간', 8, '시간', { step: 0.5 }),
+      checkbox('over50', '퇴사일 기준 만 50세 이상 또는 장애인'),
+    ]),
+    article: `
+<h2>구직급여 계산 방법</h2>
+<ul>
+  <li><strong>1일 구직급여</strong> = 퇴직 전 평균임금 × 60%</li>
+  <li><strong>상한액</strong>: 1일 ${won(BENEFIT.maxDaily)} (2026년 1월 1일 이후 이직자)</li>
+  <li><strong>하한액</strong>: 최저임금 × 80% × 1일 소정근로시간 → 8시간 기준 1일 ${won(Math.floor(MIN_WAGE.hourly * BENEFIT.minRatio * 8))}</li>
+</ul>
+<p>2026년은 최저임금 인상으로 하한액이 상한액에 바짝 붙어, 3개월 급여가 약 1,000만원(월 약 340만원) 이하라면 하한액을 받습니다.</p>
+<h2>소정급여일수</h2>
+${table(
+  ['고용보험 가입기간', '50세 미만', '50세 이상·장애인'],
+  [
+    ['1년 미만', '120일', '120일'],
+    ['1년~3년 미만', '150일', '180일'],
+    ['3년~5년 미만', '180일', '210일'],
+    ['5년~10년 미만', '210일', '240일'],
+    ['10년 이상', '240일', '270일'],
+  ],
+)}
+<p>이직 전 18개월 동안 피보험 단위기간이 180일 이상이고, 비자발적으로 이직했으며, 적극적으로 재취업 활동을 해야 받을 수 있습니다.</p>`,
+    faq: [
+      ['자발적으로 퇴사해도 받을 수 있나요?', '원칙적으로는 받을 수 없습니다. 다만 임금체불, 직장 내 괴롭힘, 통근 곤란 등 정당한 사유가 인정되면 받을 수 있습니다.'],
+      ['실업급여는 한 달에 얼마 정도인가요?', `8시간 근무자 기준 30일에 하한액이면 ${won(Math.floor(MIN_WAGE.hourly * BENEFIT.minRatio * 8) * 30)}, 상한액이면 ${won(BENEFIT.maxDaily * 30)}입니다.`],
+    ],
+    sources: [SRC.benefit],
+  },
+  {
+    slug: 'vat',
+    category: '생활',
+    icon: '🧮',
+    title: '부가세 계산기 — 공급가액·부가세 10%·합계금액 역산',
+    h1: '부가세 계산기',
+    description: '공급가액에 부가세 10%를 더하거나, 부가세 포함 합계금액에서 공급가액과 세액을 역산합니다. 세금계산서·견적서 작성 시 바로 쓰세요.',
+    script: 'vat',
+    updated: '2026-10-19',
+    body: calculator([
+      segmented('mode', '입력 금액', [['supply', '공급가액 (부가세 별도)'], ['total', '합계금액 (부가세 포함)']], 'supply'),
+      money('amount', '금액', '1,000,000'),
+    ]),
+    article: `
+<h2>부가세 계산 공식</h2>
+<ul>
+  <li>부가세 = 공급가액 × 10%</li>
+  <li>합계금액 = 공급가액 × 1.1</li>
+  <li>공급가액 = 합계금액 ÷ 1.1 (원 미만 올림, 세액은 차액)</li>
+</ul>
+<p>간이과세자는 업종별 부가가치율을 곱해 납부세액을 계산하므로 실제 납부액은 다를 수 있습니다.</p>`,
+    faq: [['VAT 포함 11만원이면 공급가액은?', '공급가액 100,000원, 부가세 10,000원입니다.']],
+    sources: [SRC.vat],
   },
 ];
 

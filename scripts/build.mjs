@@ -14,7 +14,7 @@ async function emit(path, html) {
   await writeFile(file, html);
 }
 
-const nav = pages.filter((p) => ['salary', 'loan', 'savings', 'severance', 'brokerage', 'wage'].includes(p.slug));
+const nav = pages.filter((p) => ['salary', 'loan', 'savings', 'acquisition-tax', 'severance', 'unemployment', 'brokerage', 'wage'].includes(p.slug));
 
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });

@@ -23,7 +23,10 @@ function head({ title, description, path, depth, jsonLd = [] }) {
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:locale" content="ko_KR">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${absUrl('og.png')}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0f766e">
 ${site.googleVerify ? `<meta name="google-site-verification" content="${esc(site.googleVerify)}">` : ''}
 ${site.naverVerify ? `<meta name="naver-site-verification" content="${esc(site.naverVerify)}">` : ''}
