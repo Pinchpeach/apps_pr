@@ -1,2 +1,0 @@
-import { apiFetch } from './apiClient';
-import { NewsItem } from '../data/news';export type MarketReport={period:'daily'|'weekly'|'monthly';generatedAt:string;summary:string;categories:{name:string;count:number}[];highlights:NewsItem[];source?:string;reportDate?:string;importedAt?:string};export async function getReport(period:MarketReport['period']){const r=await apiFetch('/reports/'+period);if(!r.ok)throw new Error('리포트를 불러오지 못했습니다.');return r.json() as Promise<MarketReport>}

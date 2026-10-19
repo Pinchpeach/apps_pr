@@ -1,101 +1,53 @@
-# Apps PR — Full-Stack Feature Showcase
+# 머니계산기
 
-A portfolio-first application built to demonstrate working product features, not just static screens.
+2026년 기준 한국 금융 계산기 모음 정적 사이트입니다. 검색 유입 → 광고(애드센스) 수익을 목표로 합니다.
+작업 원칙은 [RULES.md](RULES.md), 벤치마킹 근거는 [docs/benchmark.md](docs/benchmark.md)에 있습니다.
 
-## Showcase
-- Authentication and protected routes
-- Responsive dashboard for web/mobile
-- Interactive Feature Playground
-- CRUD state demo, search and filtering
-- News, saved items, calendar and report flows
-- Node backend integration and secure token storage
-- Docker-based local backend setup
+## 계산기
 
-## Stack
-Expo · React Native · Expo Router · TypeScript · Node.js · Docker
+| 경로 | 내용 | 기준 |
+|---|---|---|
+| `/salary/` | 연봉 실수령액 | 4대보험 2026.7 요율, 근로소득 간이세액표(2026.2.27 개정) 원문 |
+| `/salary-table/` | 연봉별 실수령액 표 | 위와 동일, 빌드 시 생성 |
+| `/loan/` | 대출이자 (원리금균등·원금균등·만기일시, 거치) | |
+| `/savings/` | 예금·적금 이자, 세후 수령액 | 이자소득세 15.4% / 9.5% / 비과세 |
+| `/severance/` | 퇴직금 | 근로자퇴직급여 보장법 평균임금 |
+| `/brokerage/` | 부동산 중개수수료 | 2021.10.19 시행 요율 |
+| `/wage/` | 시급↔월급, 주휴수당 | 2026 최저임금 10,320원 |
+| `/percent/`, `/dday/` | 퍼센트, 날짜 | |
 
-## Run
-Use Node.js 22+ and Docker. Authentication requires a running API and PostgreSQL.
-Start the database and API first:
+## 개발
+
+의존성이 없습니다. Node.js 20 이상만 있으면 됩니다.
 
 ```bash
-docker compose up -d postgres
-cd server
-npm install
-npm run setup
-npm run dev
+npm test          # 계산 로직 단위 테스트
+npm run build     # dist/ 에 정적 사이트 생성
+npm run dev       # 빌드 후 http://localhost:4173 에서 확인
 ```
 
-`setup` creates `server/.env` with a random local `AUTH_SECRET` and the Compose database URL.
-It never overwrites an existing file. Both `dev` and `start` load this file before importing
-the database/auth modules; existing process environment variables take precedence.
-If using your own database, edit `DATABASE_URL` in `server/.env`.
+구조: `src/calc/` 순수 계산 함수(브라우저·테스트 공용) · `src/client/` 페이지별 브라우저 스크립트 ·
+`src/pages.js` 페이지 내용 · `src/layout.js` HTML 레이아웃·SEO · `scripts/build.mjs` 생성기.
 
-In a second terminal, from the repository root:
+간이세액표가 개정되면 국가법령정보센터에서 별표2 PDF를 받아 다음을 실행합니다.
 
 ```bash
-npm install
-npm run web
-```
-
-Open `http://localhost:8081`. Local HTTP web uses the same loopback hostname on port 3000
-when `EXPO_PUBLIC_API_URL` is absent. The API should respond at `http://localhost:3000/health`.
-
-For a deployed web build or a physical device, set `EXPO_PUBLIC_API_URL` in the root `.env`
-to the API address reachable **from that browser/device**. Android emulator host access can
-use `http://10.0.2.2:3000`; physical devices need the computer's reachable LAN address.
-After changing `.env`, restart with `npx expo start --clear`; rebuild exported websites with `npx expo export --platform web --clear` to discard any cached API URL. HTTPS websites
-require an HTTPS API. A deployed build must not point to `localhost`.
-
-On the API, set `CORS_ORIGIN` to the exact frontend origins (scheme, hostname, port),
-comma-separated. Whitespace and trailing slashes are normalized; paths and wildcards are
-rejected. Development defaults allow `http://localhost:8081` and `http://127.0.0.1:8081`.
-Production requires an explicit `CORS_ORIGIN`, `DATABASE_URL`, and a private `AUTH_SECRET`
-of at least 32 characters. Never expose the latter two as `EXPO_PUBLIC_*` variables.
-
-## Verify / troubleshoot connection errors
-
-- If `/health` cannot connect, start PostgreSQL and the API and inspect startup errors.
-- If `/health` opens but browser login fails, check CORS and HTTPS/HTTP mismatch.
-- If startup reports a missing variable, run `npm run setup` in `server` or correct its `.env`.
-- Build success alone does not prove authentication works. Run all checks below.
-
-```bash
-npx tsc --noEmit
-npx expo export --platform web
-cd server
-npm run typecheck
+pdftotext -layout 별표2.pdf table.txt
+python3 -I scripts/parse-tax-table.py table.txt src/calc/taxTable.js
 npm test
-npm run test:api
 ```
 
-`test:api` starts its own server on port 3001 (override with `TEST_API_PORT`) against the
-configured database, checks real HTTP/CORS and authentication flows, and removes its test
-user. Use a disposable local/test database. CI runs it against PostgreSQL 16.
+## 배포 (GitHub Pages)
 
-Open **Playground** from the dashboard to explore the portfolio-oriented feature demonstrations.
+`main`에 푸시되면 `.github/workflows/site.yml`이 테스트 후 GitHub Pages로 배포합니다.
+처음 한 번 저장소 **Settings → Pages → Source: GitHub Actions** 를 선택해야 합니다.
 
-## Notion briefing archive (snapshot import)
+선택 설정은 **Settings → Secrets and variables → Actions → Variables** 에 넣습니다. 비어 있으면 해당 기능은 꺼집니다.
 
-The site includes the snapshot retrieved on 2026-09-24 from **글로벌 경제 브리핑 → 경제 브리핑 아카이브**:
-https://www.notion.so/1e515d0ec6cf4b95a3e1a6844e0dbfc9
-
-- 7 pages: 6 daily briefings and 1 weekly report, dated September 19–24. No monthly report exists in this snapshot.
-- Titles, original summaries, full text/tables, dates, regions, sectors and source URLs are preserved in `server/data/notion-briefings.json`.
-- API startup inserts missing pages into PostgreSQL before accepting requests. Stable Notion page IDs prevent duplicates and preserve saved references; existing records are not overwritten on restart.
-- News, search, regional/sector filters, calendar, saved items and report tabs use those database records. Reports follow the original Notion type and display their original publication date.
-- This is a **one-time snapshot, not automatic synchronization**. No Notion token is required. New or edited Notion pages will not appear until a fresh snapshot is imported.
-- To reapply a refreshed snapshot (including updates to existing pages), run `npm run import:notion` from `server` while PostgreSQL is running. This does not delete other articles or Notion pages missing from the snapshot.
-- The imported material is user-authored Notion content; the import does not independently verify its financial claims. The original Notion page and reference source remain linked in each detail view.
-
-The bundled snapshot is the source for a new local database too: pulling this change and starting the API is enough to populate the archive.
-
-### For simple test
-#### ./server
-- npm.cmd install
-- docker compose -f ..\docker-compose.yml up -d --wait postgres
-- npm.cmd run dev
-
-#### /root
-- npm.cmd install
-- npm.cmd run web
+| 변수 | 용도 |
+|---|---|
+| `SITE_URL` | 커스텀 도메인 (예: `https://moneycalc.kr`). 없으면 GitHub Pages 주소 |
+| `ADSENSE_CLIENT` | 애드센스 게시자 ID `ca-pub-…` — 설정 시 광고 코드와 `ads.txt` 생성 |
+| `GA_ID` | Google Analytics 4 측정 ID |
+| `GSC_VERIFY`, `NAVER_VERIFY` | 구글 서치콘솔·네이버 서치어드바이저 소유권 확인 값 |
+| `CONTACT_EMAIL` | 소개·개인정보처리방침 페이지의 문의 주소 |

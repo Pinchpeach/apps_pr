@@ -1,1 +1,0 @@
-export function summarize(text:string){const clean=text.replace(/\s+/g,' ').trim();if(!clean)return '요약할 본문이 없습니다.';const sentences=clean.split(/(?<=[.!?。])\s+/).filter(Boolean);return (sentences.slice(0,3).join(' ')||clean).slice(0,500)};
