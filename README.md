@@ -1,82 +1,46 @@
 # 프리셈
 
-3.3% 떼이는 **프리랜서·N잡러를 위한 세금·보험 계산 앱**입니다. 모바일 우선 PWA(홈 화면 설치, 오프라인 동작)이며
-검색 유입 → 광고 수익을 목표로 합니다. 작업 원칙은 [RULES.md](RULES.md), 벤치마킹 근거는 [docs/benchmark.md](docs/benchmark.md)에 있습니다.
+3.3% 떼이는 **프리랜서·N잡러를 위한 세금·보험 계산 앱**입니다. Expo(React Native)로 만든 Android·iOS 앱이며,
+모든 계산은 기기 안에서만 이루어집니다(서버 없음, 오프라인 동작).
+작업 원칙은 [RULES.md](RULES.md), 벤치마킹 근거는 [docs/benchmark.md](docs/benchmark.md)에 있습니다.
 
-## 주 기능 (프리랜서·N잡)
+## 화면
 
-| 경로 | 내용 | 근거 |
+| 탭 | 내용 | 근거 |
 |---|---|---|
-| `/freelancer-33/` | 3.3% 세전↔실수령 역산, 소액부징수 | 소득세법 |
-| `/income-tax-refund/` | 5월 종합소득세 환급·추가납부 추정, 단순/기준경비율 자동 판정, 2.8·3.4배 상한 | 시행령 제143조, 시행규칙 제67조 |
-| `/dependent/` | 건강보험 피부양자 유지 여부와 남은 여유 소득 | 피부양자 소득·재산 요건 |
+| 환급 예상 | 5월 종합소득세 환급·추가납부 추정, 단순/기준경비율 자동 판정, 2.8·3.4배 상한 | 소득세법 시행령 제143조, 시행규칙 제67조 |
+| N잡 세금 | 직장인 원천징수영수증 + 3.3% 부업 합산 시 추가 납부액 | 소득세법 제47조·제59조 |
+| 3.3% 계산 | 세전↔실수령 역산, 소액부징수 | 소득세법 |
+| 피부양자 | 건강보험 피부양자 유지 여부와 남은 여유 소득 | 피부양자 소득·재산 요건 |
 
-업종별 경비율(`INDUSTRY_PRESETS`)은 매년 국세청 고시로 바뀌는 참고값이며 화면에서 수정할 수 있습니다.
+업종별 경비율(`INDUSTRY_PRESETS`)은 매년 국세청 고시로 바뀌는 참고값이며 앱에서 수정할 수 있습니다.
 
-## 기타 계산기
+## 구조
 
-| 경로 | 내용 | 기준 |
-|---|---|---|
-| `/salary/` | 연봉 실수령액 | 4대보험 2026.7 요율, 근로소득 간이세액표(2026.2.27 개정) 원문 |
-| `/salary-table/` | 연봉별 실수령액 표 | 위와 동일, 빌드 시 생성 |
-| `/loan/` | 대출이자 (원리금균등·원금균등·만기일시, 거치) | |
-| `/savings/` | 예금·적금 이자, 세후 수령액 | 이자소득세 15.4% / 9.5% / 비과세 |
-| `/severance/` | 퇴직금 | 근로자퇴직급여 보장법 평균임금 |
-| `/brokerage/` | 부동산 중개수수료 | 2021.10.19 시행 요율 |
-| `/wage/` | 시급↔월급, 주휴수당 | 2026 최저임금 10,320원 |
-| `/acquisition-tax/` | 주택 취득세·지방교육세·농특세, 다주택 중과, 생애최초 감면 | 지방세법 제11조, 지특법 제36조의3 |
-| `/rent-conversion/` | 전세↔월세 전환, 법정 상한 | 기준금리 3.00%(2026.8.27) + 2% |
-| `/unemployment/` | 실업급여(구직급여) | 상한 68,100원, 하한 최저임금 80% |
-| `/vat/` | 부가세 10% 계산·역산 | |
-| `/percent/`, `/dday/` | 퍼센트, 날짜 | |
+- `src/app/` — Expo Router 화면 (`(tabs)/` 하단 탭 4개)
+- `src/components/` — 입력 필드, 결과 카드, 업종 선택
+- `src/calc/` — 계산 엔진 (순수 JS, `node --test`로 검증). `freelancer.js`가 앱의 핵심이며 나머지는 이전 계산기 사이트에서 남은 모듈입니다.
+- `test/` — 계산 엔진 단위 테스트
 
 ## 개발
 
-의존성이 없습니다. Node.js 20 이상만 있으면 됩니다.
-
 ```bash
-npm test          # 계산 로직 단위 테스트
-npm run build     # dist/ 에 정적 사이트 생성
-npm run dev       # 빌드 후 http://localhost:4173 에서 확인
+npm install
+npm test            # 계산 엔진 테스트
+npm run typecheck   # TypeScript 검사
+npx expo start      # Expo Go 또는 에뮬레이터에서 실행
 ```
 
-구조: `src/calc/` 순수 계산 함수(브라우저·테스트 공용) · `src/client/` 페이지별 브라우저 스크립트 ·
-`src/pages.js` 페이지 내용 · `src/layout.js` HTML 레이아웃·SEO · `scripts/build.mjs` 생성기.
+## 빌드·출시 (EAS)
 
-간이세액표가 개정되면 국가법령정보센터에서 별표2 PDF를 받아 다음을 실행합니다.
+`eas.json`에 프로필이 있습니다. Expo 계정이 필요합니다.
 
 ```bash
-pdftotext -layout 별표2.pdf table.txt
-python3 -I scripts/parse-tax-table.py table.txt src/calc/taxTable.js
-npm test
+npx eas-cli@latest login
+npx eas-cli@latest build --profile preview --platform android     # 테스트용 APK
+npx eas-cli@latest build --profile production --platform android  # Play 스토어용 AAB
+npx eas-cli@latest submit --platform android                      # Play Console 내부 테스트 트랙
 ```
 
-## 배포 (GitHub Pages)
-
-`main`에 푸시되면 `.github/workflows/site.yml`이 테스트 후 GitHub Pages로 배포합니다.
-처음 한 번 저장소 **Settings → Pages → Source: GitHub Actions** 를 선택해야 합니다.
-
-### 커스텀 도메인 (www.kmoney-calc.com)
-
-1. 도메인 등록업체 DNS에 다음을 추가합니다.
-
-   | 타입 | 이름 | 값 |
-   |---|---|---|
-   | A | `@` | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` (4개) |
-   | AAAA | `@` | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` (4개) |
-   | CNAME | `www` | `pinchpeach.github.io` |
-
-2. **Settings → Pages → Custom domain** 에 `www.kmoney-calc.com` 입력 → DNS 확인 후 **Enforce HTTPS** 체크.
-   A/AAAA 레코드가 있으면 `kmoney-calc.com`(www 없음)은 GitHub가 www 주소로 자동 연결합니다.
-3. 저장소 변수 `SITE_URL` = `https://www.kmoney-calc.com` 설정 후 Actions에서 Site 워크플로를 다시 실행합니다.
-4. (권장) GitHub 계정 **Settings → Pages → Add a domain** 에서 도메인 소유권을 인증해 도메인 탈취를 막습니다.
-
-선택 설정은 **Settings → Secrets and variables → Actions → Variables** 에 넣습니다. 비어 있으면 해당 기능은 꺼집니다.
-
-| 변수 | 용도 |
-|---|---|
-| `SITE_URL` | 커스텀 도메인 (예: `https://www.kmoney-calc.com`). 없으면 GitHub Pages 주소 |
-| `ADSENSE_CLIENT` | 애드센스 게시자 ID `ca-pub-…` — 설정 시 광고 코드와 `ads.txt` 생성 |
-| `GA_ID` | Google Analytics 4 측정 ID |
-| `GSC_VERIFY`, `NAVER_VERIFY` | 구글 서치콘솔·네이버 서치어드바이저 소유권 확인 값 |
-| `CONTACT_EMAIL` | 소개·개인정보처리방침 페이지의 문의 주소 |
+- Android 패키지명 / iOS 번들 ID: `com.pinchpeach.freesem` (출시 후 변경 불가)
+- Play 스토어 출시에는 Google Play 개발자 계정(1회 $25)이, iOS에는 Apple Developer Program(연 $99)이 필요합니다.
