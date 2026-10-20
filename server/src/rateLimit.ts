@@ -1,4 +1,0 @@
-import type { NextFunction,Request,Response } from 'express';
-const buckets=new Map<string,{count:number;reset:number}>();
-let calls=0;
-export function rateLimit(max=10,windowMs=60000){return(req:Request,res:Response,next:NextFunction)=>{const key=(req.ip||'unknown')+':'+req.path;const now=Date.now();const current=buckets.get(key);const b=!current||current.reset<=now?{count:0,reset:now+windowMs}:current;b.count++;buckets.set(key,b);if(++calls%250===0)for(const [k,v] of buckets)if(v.reset<=now)buckets.delete(k);res.setHeader('RateLimit-Limit',String(max));res.setHeader('RateLimit-Remaining',String(Math.max(0,max-b.count)));res.setHeader('RateLimit-Reset',String(Math.ceil(b.reset/1000)));if(b.count>max){res.setHeader('Retry-After',String(Math.max(1,Math.ceil((b.reset-now)/1000))));return res.status(429).json({error:'too_many_requests'})}next()}}

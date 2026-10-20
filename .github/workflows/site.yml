@@ -1,0 +1,60 @@
+name: Site
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - run: npm run build
+
+  # 공개 배포는 main 브랜치에서만 실행된다 (RULES.md: 공개 배포는 승인 후).
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Build
+        env:
+          BASE_PATH: ${{ vars.SITE_URL && '/' || steps.pages.outputs.base_path }}
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
+          GA_ID: ${{ vars.GA_ID }}
+          GSC_VERIFY: ${{ vars.GSC_VERIFY }}
+          NAVER_VERIFY: ${{ vars.NAVER_VERIFY }}
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+        run: |
+          # 커스텀 도메인이 없으면 GitHub Pages 주소의 origin을 사용한다.
+          export SITE_URL="${SITE_URL:-$(echo "$PAGES_BASE_URL" | sed -E 's#^(https?://[^/]+).*#\1#')}"
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
