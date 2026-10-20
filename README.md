@@ -46,7 +46,7 @@ npm test
 `main`에 푸시되면 `.github/workflows/site.yml`이 테스트 후 GitHub Pages로 배포합니다.
 처음 한 번 저장소 **Settings → Pages → Source: GitHub Actions** 를 선택해야 합니다.
 
-### 커스텀 도메인 (www.moneycalc-kr.com)
+### 커스텀 도메인 (www.money-calc.com)
 
 1. 도메인 등록업체 DNS에 다음을 추가합니다.
 
@@ -56,16 +56,16 @@ npm test
    | AAAA | `@` | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` (4개) |
    | CNAME | `www` | `pinchpeach.github.io` |
 
-2. **Settings → Pages → Custom domain** 에 `www.moneycalc-kr.com` 입력 → DNS 확인 후 **Enforce HTTPS** 체크.
-   A/AAAA 레코드가 있으면 `moneycalc-kr.com`(www 없음)은 GitHub가 www 주소로 자동 연결합니다.
-3. 저장소 변수 `SITE_URL` = `https://www.moneycalc-kr.com` 설정 후 Actions에서 Site 워크플로를 다시 실행합니다.
+2. **Settings → Pages → Custom domain** 에 `www.money-calc.com` 입력 → DNS 확인 후 **Enforce HTTPS** 체크.
+   A/AAAA 레코드가 있으면 `money-calc.com`(www 없음)은 GitHub가 www 주소로 자동 연결합니다.
+3. 저장소 변수 `SITE_URL` = `https://www.money-calc.com` 설정 후 Actions에서 Site 워크플로를 다시 실행합니다.
 4. (권장) GitHub 계정 **Settings → Pages → Add a domain** 에서 도메인 소유권을 인증해 도메인 탈취를 막습니다.
 
 선택 설정은 **Settings → Secrets and variables → Actions → Variables** 에 넣습니다. 비어 있으면 해당 기능은 꺼집니다.
 
 | 변수 | 용도 |
 |---|---|
-| `SITE_URL` | 커스텀 도메인 (예: `https://www.moneycalc-kr.com`). 없으면 GitHub Pages 주소 |
+| `SITE_URL` | 커스텀 도메인 (예: `https://www.money-calc.com`). 없으면 GitHub Pages 주소 |
 | `ADSENSE_CLIENT` | 애드센스 게시자 ID `ca-pub-…` — 설정 시 광고 코드와 `ads.txt` 생성 |
 | `GA_ID` | Google Analytics 4 측정 ID |
 | `GSC_VERIFY`, `NAVER_VERIFY` | 구글 서치콘솔·네이버 서치어드바이저 소유권 확인 값 |
