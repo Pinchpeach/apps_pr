@@ -1,5 +1,6 @@
 // 세금 일정 로컬 알림 (기기 안에서만 예약, 서버·푸시 없음). 웹 빌드는 reminders.web.ts.
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications';
 import { Platform } from 'react-native';
 import { reminderTimes } from '@/calc/schedule';
 
@@ -12,7 +13,7 @@ Notifications.setNotificationHandler({
 /** 권한을 받고 앞으로의 일정 알림을 모두 다시 예약한다. 예약한 개수를 돌려주며, 권한이 없으면 null. */
 export async function scheduleReminders(): Promise<number | null> {
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('deadlines', { name: '세금 일정 알림', importance: Notifications.AndroidImportance.DEFAULT });
+    await Notifications.setNotificationChannelAsync('deadlines', { name: '세금 일정 알림', importance: AndroidImportance.DEFAULT });
   }
   let { status } = await Notifications.getPermissionsAsync();
   if (status !== 'granted') ({ status } = await Notifications.requestPermissionsAsync());
