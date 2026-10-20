@@ -94,6 +94,9 @@ test('수입 기록: 추가 → 합계 → 환급 탭에 반영', async () => {
   await page.getByRole('radio', { name: '2026년' }).click();
   // 스택 화면은 상단 헤더 제목도 heading이므로 두 번째가 결과
   assert.deepEqual(await page.locator('[role=heading]:visible').allTextContents(), ['수입 기록', '15,000,000원']);
+  // 지급처가 둘이면 지급처별 합계와 내보내기 버튼이 보인다
+  await page.getByText('지급처별 합계').waitFor();
+  assert.equal(await page.getByRole('button', { name: '전체 기록 내보내기 (CSV)' }).count(), 1);
   await page.getByRole('button', { name: '이 합계를 계산기에 반영' }).click();
   await page.getByText('반영했습니다').waitFor();
   // 환급 탭으로 이동하면 수입이 1,500만원으로 바뀌어 있다

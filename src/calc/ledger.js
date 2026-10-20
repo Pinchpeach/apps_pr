@@ -32,3 +32,33 @@ export const recordedYears = (entries) => [...new Set(entries.map((e) => Number(
 
 /** 날짜 최신 순 정렬 */
 export const sortEntries = (entries) => [...entries].sort((a, b) => (a.date === b.date ? (a.id < b.id ? 1 : -1) : a.date < b.date ? 1 : -1));
+
+/** 해당 연도 지급처별 합계 (많은 순) */
+export function totalsByPayer(entries, year) {
+  const map = new Map();
+  for (const e of entries) {
+    if (!e.date.startsWith(`${year}-`)) continue;
+    const cur = map.get(e.payer) ?? { payer: e.payer, gross: 0, count: 0 };
+    cur.gross += e.gross;
+    cur.count += 1;
+    map.set(e.payer, cur);
+  }
+  return [...map.values()].sort((a, b) => b.gross - a.gross);
+}
+
+const csvCell = (v) => {
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+/** 기록 → CSV (엑셀에서 한글이 깨지지 않도록 BOM 포함). 원천징수 세액도 함께 적는다. */
+export function toCsv(entries) {
+  const header = ['날짜', '지급처', '구분', '세전 지급액', '소득세', '지방소득세', '실수령액'];
+  const rows = sortEntries(entries)
+    .reverse()
+    .map((e) => {
+      const w = e.kind === 'other' ? otherIncomeWithholding(e.gross) : withholding33(e.gross);
+      return [e.date, e.payer, e.kind === 'other' ? '기타소득 8.8%' : '사업소득 3.3%', e.gross, w.incomeTax, w.localTax, w.net];
+    });
+  return '﻿' + [header, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
+}
