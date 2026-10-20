@@ -46,6 +46,20 @@ npm test
 `main`에 푸시되면 `.github/workflows/site.yml`이 테스트 후 GitHub Pages로 배포합니다.
 처음 한 번 저장소 **Settings → Pages → Source: GitHub Actions** 를 선택해야 합니다.
 
+### 커스텀 도메인 (money-calc.kr)
+
+1. 도메인 등록업체 DNS에 다음을 추가합니다.
+
+   | 타입 | 이름 | 값 |
+   |---|---|---|
+   | A | `@` | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` (4개) |
+   | AAAA | `@` | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` (4개) |
+   | CNAME | `www` | `pinchpeach.github.io` |
+
+2. **Settings → Pages → Custom domain** 에 `money-calc.kr` 입력 → DNS 확인 후 **Enforce HTTPS** 체크.
+3. 저장소 변수 `SITE_URL` = `https://money-calc.kr` 설정 후 Actions에서 Site 워크플로를 다시 실행합니다.
+4. (권장) GitHub 계정 **Settings → Pages → Add a domain** 에서 도메인 소유권을 인증해 도메인 탈취를 막습니다.
+
 선택 설정은 **Settings → Secrets and variables → Actions → Variables** 에 넣습니다. 비어 있으면 해당 기능은 꺼집니다.
 
 | 변수 | 용도 |
