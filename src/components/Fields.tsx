@@ -36,6 +36,25 @@ export function MoneyField({ label, value, onChange, hint }: { label: string; va
   );
 }
 
+/** 글자 입력 (지급처, 날짜 등) */
+export function TextField({ label, value, onChange, placeholder, hint }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string }) {
+  const t = useTheme();
+  return (
+    <Label label={label} hint={hint}>
+      <View style={[styles.inputRow, { backgroundColor: t.bg, borderColor: t.line }]}>
+        <TextInput
+          accessibilityLabel={label}
+          style={[styles.input, { color: t.text, textAlign: 'left' }]}
+          value={value}
+          placeholder={placeholder}
+          placeholderTextColor={t.muted}
+          onChangeText={onChange}
+        />
+      </View>
+    </Label>
+  );
+}
+
 /** 소수 허용 숫자 입력 (비율·인원 등) */
 export function NumberField({
   label,

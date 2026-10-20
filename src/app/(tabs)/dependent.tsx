@@ -3,6 +3,7 @@ import { calcRegionalPremium } from '@/calc/nhi';
 import { Collapsible, MoneyField, NumberField, Segmented } from '@/components/Fields';
 import { Notes, Paragraph, Result, type Row } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
+import { LinkCard } from '@/components/LinkCard';
 import { usePersistentState } from '@/storage/usePersistentState';
 import { won } from '@/format';
 
@@ -83,6 +84,7 @@ export default function DependentScreen() {
           <MoneyField label="월세" value={leaseMonthly} onChange={setLeaseMonthly} hint="(보증금 + 월세 × 40) × 30%를 재산으로 봅니다." />
         </Collapsible>
       </Card>
+      <LinkCard href="/ledger" title="수입 기록에서 불러오기" body="수입 기록 화면의 「계산기에 반영」을 누르면 연간 사업 수입이 여기에 들어옵니다." />
       <Notes sources={[['국민건강보험공단 — 피부양자 자격 기준', 'https://www.nhis.or.kr']]}>
         <Paragraph>
           사업자등록이 없으면 사업소득금액 연 500만원, 모든 소득 합산 연 2,000만원(이자·배당은 1,000만원 초과일 때만 합산)을 넘으면 탈락합니다. 재산세 과세표준 9억원 초과, 또는 5.4억원
