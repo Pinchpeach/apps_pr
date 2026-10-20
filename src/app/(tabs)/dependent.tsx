@@ -1,4 +1,5 @@
 import { checkDependent } from '@/calc/freelancer';
+import { calcRegionalPremium } from '@/calc/nhi';
 import { Collapsible, MoneyField, NumberField, Segmented } from '@/components/Fields';
 import { Notes, Paragraph, Result, type Row } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
@@ -13,9 +14,20 @@ export default function DependentScreen() {
   const [pensionIncome, setPensionIncome] = usePersistentState('dependent.pensionIncome', 0);
   const [financialIncome, setFinancialIncome] = usePersistentState('dependent.financialIncome', 0);
   const [propertyBase, setPropertyBase] = usePersistentState('dependent.propertyBase', 0);
+  const [leaseDeposit, setLeaseDeposit] = usePersistentState('dependent.leaseDeposit', 0);
+  const [leaseMonthly, setLeaseMonthly] = usePersistentState('dependent.leaseMonthly', 0);
 
   const businessIncome = Math.floor(revenue * (1 - expenseRate / 100));
   const r = checkDependent({ businessIncome, registered: registered === 'yes', wageIncome, pensionIncome, financialIncome, propertyBase });
+  const premium = calcRegionalPremium({
+    business: businessIncome,
+    wage: wageIncome,
+    pension: pensionIncome,
+    interestDividend: financialIncome,
+    propertyBase,
+    leaseDeposit: propertyBase > 0 ? 0 : leaseDeposit,
+    leaseMonthly: propertyBase > 0 ? 0 : leaseMonthly,
+  });
   const rows: Row[] = [
     { label: '사업소득금액 (수입 − 경비)', value: won(businessIncome) },
     { label: '합산소득', value: won(r.total) },
@@ -37,6 +49,19 @@ export default function DependentScreen() {
         }
         rows={rows}
       />
+      <Result
+        caption={r.eligible ? '탈락한다면 내야 할 건강보험료 (월)' : '지역가입자 건강보험료 예상 (월)'}
+        headline={won(premium.total)}
+        tone={r.eligible ? 'accent' : 'warn'}
+        note="올해 소득은 다음 해 11월부터 보험료에 반영됩니다."
+        rows={[
+          { label: '소득월액 (근로·연금은 50%)', value: won(premium.incomeMonthly) },
+          { label: '소득 보험료 (7.19%)', value: won(premium.incomePremium) },
+          { label: `재산 보험료 (${premium.points.toLocaleString('ko-KR')}점 × 211.5원)`, value: won(premium.propertyPremium) },
+          { label: '장기요양보험료 (13.14%)', value: won(premium.longTermCare) },
+          { label: '월 합계', value: won(premium.total), tone: 'total' },
+        ]}
+      />
       <Card>
         <Segmented
           label="사업자등록"
@@ -53,13 +78,15 @@ export default function DependentScreen() {
           <MoneyField label="근로소득 (총급여)" value={wageIncome} onChange={setWageIncome} />
           <MoneyField label="연금소득 (공적연금)" value={pensionIncome} onChange={setPensionIncome} />
           <MoneyField label="이자·배당 소득" value={financialIncome} onChange={setFinancialIncome} hint="연 1,000만원 이하면 합산하지 않습니다." />
-          <MoneyField label="재산세 과세표준 합계" value={propertyBase} onChange={setPropertyBase} />
+          <MoneyField label="재산세 과세표준 합계" value={propertyBase} onChange={setPropertyBase} hint="집·토지 등. 공시가격의 약 60% 수준" />
+          <MoneyField label="전월세 보증금 (집이 없을 때)" value={leaseDeposit} onChange={setLeaseDeposit} />
+          <MoneyField label="월세" value={leaseMonthly} onChange={setLeaseMonthly} hint="(보증금 + 월세 × 40) × 30%를 재산으로 봅니다." />
         </Collapsible>
       </Card>
       <Notes sources={[['국민건강보험공단 — 피부양자 자격 기준', 'https://www.nhis.or.kr']]}>
         <Paragraph>
           사업자등록이 없으면 사업소득금액 연 500만원, 모든 소득 합산 연 2,000만원(이자·배당은 1,000만원 초과일 때만 합산)을 넘으면 탈락합니다. 재산세 과세표준 9억원 초과, 또는 5.4억원
-          초과이면서 소득 1,000만원 초과여도 탈락합니다. 최종 판정은 공단(1577-1000)에 확인하세요.
+          초과이면서 소득 1,000만원 초과여도 탈락합니다. 지역가입자 보험료는 소득(7.19%)과 재산(1억원 공제 후 등급 점수 × 211.5원)으로 정해지며, 소득월액 28만원 이하면 최저 20,160원입니다. 최종 판정과 보험료는 공단(1577-1000)에 확인하세요.
         </Paragraph>
       </Notes>
     </Screen>
