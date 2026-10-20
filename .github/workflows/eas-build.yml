@@ -1,0 +1,36 @@
+name: EAS Build
+# 수동 실행 전용. 저장소 Secrets에 EXPO_TOKEN(Expo 개인 액세스 토큰)이 있어야 한다.
+# 처음 한 번은 로컬에서 `eas build`를 대화형으로 실행해 프로젝트 ID와 서명 키를 만든 뒤 사용한다.
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 플랫폼
+        type: choice
+        options: [android, ios, all]
+        default: android
+      profile:
+        description: 빌드 프로필 (eas.json)
+        type: choice
+        options: [preview, production]
+        default: preview
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - run: npm test
+      - run: eas build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --no-wait

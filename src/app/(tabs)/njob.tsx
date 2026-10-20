@@ -1,19 +1,19 @@
-import { useState } from 'react';
 import { calcNjobTax } from '@/calc/freelancer';
 import { MoneyField } from '@/components/Fields';
 import { METHOD_LABEL, useIndustry } from '@/components/Industry';
 import { Notes, Paragraph, Result } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
+import { usePersistentState } from '@/storage/usePersistentState';
 import { signedWon, won } from '@/format';
 
 export default function NjobScreen() {
-  const [totalWage, setTotalWage] = useState(50_000_000);
-  const [wageTaxBase, setWageTaxBase] = useState(30_000_000);
-  const [wageDetermined, setWageDetermined] = useState(1_500_000);
-  const [revenue, setRevenue] = useState(10_000_000);
-  const [priorRevenue, setPriorRevenue] = useState(0);
-  const [majorExpenses, setMajorExpenses] = useState(0);
-  const { rates, picker } = useIndustry();
+  const [totalWage, setTotalWage] = usePersistentState('njob.totalWage', 50_000_000);
+  const [wageTaxBase, setWageTaxBase] = usePersistentState('njob.wageTaxBase', 30_000_000);
+  const [wageDetermined, setWageDetermined] = usePersistentState('njob.wageDetermined', 1_500_000);
+  const [revenue, setRevenue] = usePersistentState('njob.revenue', 10_000_000);
+  const [priorRevenue, setPriorRevenue] = usePersistentState('njob.priorRevenue', 0);
+  const [majorExpenses, setMajorExpenses] = usePersistentState('njob.majorExpenses', 0);
+  const { rates, picker } = useIndustry('njob');
 
   const r = calcNjobTax({ totalWage, wageTaxBase, wageDetermined, revenue, priorRevenue, rates, majorExpenses });
   const refund = r.refund >= 0;

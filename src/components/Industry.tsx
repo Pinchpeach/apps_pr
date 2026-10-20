@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { INDUSTRY_PRESETS } from '@/calc/freelancer';
+import { usePersistentState } from '@/storage/usePersistentState';
 import { Collapsible, NumberField, Segmented } from './Fields';
 
 export type Rates = { simple: number; simpleOver: number; standard: number };
@@ -7,9 +7,13 @@ export type Rates = { simple: number; simpleOver: number; standard: number };
 const asPercent = (r: number) => Number((r * 100).toFixed(1));
 
 /** 업종 선택 + 경비율(참고값, 직접 수정 가능) */
-export function useIndustry() {
-  const [code, setCode] = useState<string>(INDUSTRY_PRESETS[0].code);
-  const [rates, setRates] = useState<Rates>({ ...INDUSTRY_PRESETS[0] });
+export function useIndustry(scope: string) {
+  const [code, setCode] = usePersistentState<string>(`${scope}.industry`, INDUSTRY_PRESETS[0].code);
+  const [rates, setRates] = usePersistentState<Rates>(`${scope}.rates`, {
+    simple: INDUSTRY_PRESETS[0].simple,
+    simpleOver: INDUSTRY_PRESETS[0].simpleOver,
+    standard: INDUSTRY_PRESETS[0].standard,
+  });
   const choose = (next: string) => {
     setCode(next);
     const preset = INDUSTRY_PRESETS.find((p) => p.code === next);
