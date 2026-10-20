@@ -1,5 +1,5 @@
 import { calculator, money, number, segmented, select, checkbox, table } from './ui.js';
-import { calcIncomeTaxRefund, withholding33, INDUSTRY_PRESETS, SIMPLE_RATE_LIMITS, STANDARD_MULTIPLIER } from './calc/freelancer.js';
+import { calcIncomeTaxRefund, calcNjobTax, withholding33, INDUSTRY_PRESETS, SIMPLE_RATE_LIMITS, STANDARD_MULTIPLIER } from './calc/freelancer.js';
 
 const won = (n) => `${Math.round(n).toLocaleString('ko-KR')}원`;
 const pct = (r) => `${Number((r * 100).toFixed(1))}%`;
@@ -13,6 +13,7 @@ const SRC = {
   nhisDependent: ['국민건강보험공단 — 피부양자 자격 인정 기준', 'https://www.nhis.or.kr'],
 };
 
+const njobSample = calcNjobTax({ totalWage: 50_000_000, wageTaxBase: 30_000_000, wageDetermined: 1_500_000, revenue: 10_000_000, rates: INDUSTRY_PRESETS[0] });
 const sample = calcIncomeTaxRefund({ revenue: 20_000_000, rates: INDUSTRY_PRESETS[0] });
 
 /** @type {import('./pages.js').Page[]} */
@@ -108,6 +109,52 @@ export const freelancerPages = [
       ['작년에 수입이 많았는데 올해 단순경비율을 못 쓰나요?', '네. 단순경비율 여부는 직전 연도 수입으로 정합니다. 작년 수입이 3,600만원 이상이면 올해는 기준경비율이나 장부로 신고해야 합니다.'],
     ],
     sources: [SRC.decree143, SRC.rule67, SRC.taxRate, SRC.hometaxRate],
+  },
+  {
+    slug: 'njob-tax',
+    category: CATEGORY,
+    icon: '💼',
+    title: 'N잡 직장인 종합소득세 계산기 — 월급 + 3.3% 부업 5월 추가 납부액',
+    h1: 'N잡 직장인 종합소득세 계산기',
+    short: 'N잡 세금',
+    description:
+      '연말정산을 마친 직장인이 3.3% 부업 소득을 합쳐 5월 종합소득세를 신고하면 얼마를 더 내는지(또는 돌려받는지) 계산합니다. 원천징수영수증 숫자 3개만 있으면 됩니다.',
+    script: 'njobTax',
+    updated: '2026-10-20',
+    body: calculator([
+      money('totalWage', '총급여 (원천징수영수증 ⑯ 계)', '50,000,000'),
+      money('wageTaxBase', '종합소득 과세표준', '30,000,000', { hint: '원천징수영수증 「종합소득 과세표준」 칸' }),
+      money('wageDetermined', '결정세액 — 소득세', '1,500,000', { hint: '원천징수영수증 「결정세액」의 소득세 칸 (지방소득세 제외)' }),
+      money('revenue', '부업 총수입 (3.3% 떼기 전)', '10,000,000'),
+      money('priorRevenue', '작년 부업 총수입', '0'),
+      select('industry', '부업 업종', [...INDUSTRY_PRESETS.map((p) => [p.code, `${p.name} (${p.code})`]), ['custom', '직접 입력']], INDUSTRY_PRESETS[0].code),
+      money('majorExpenses', '증빙 있는 주요경비 (기준경비율 적용 시)', '0'),
+      `<details class="advanced"><summary>경비율 직접 입력</summary>`,
+      number('simple', '단순경비율', INDUSTRY_PRESETS[0].simple * 100, '%', { step: 0.1 }),
+      number('simpleOver', '단순경비율 (4천만원 초과분)', INDUSTRY_PRESETS[0].simpleOver * 100, '%', { step: 0.1 }),
+      number('standard', '기준경비율', INDUSTRY_PRESETS[0].standard * 100, '%', { step: 0.1 }),
+      `</details>`,
+    ]),
+    article: `
+<h2>직장인이 부업하면 왜 5월에 세금을 더 내나요</h2>
+<p>회사는 월급만 보고 연말정산을 합니다. 부업 소득이 생기면 두 소득을 <strong>합쳐서 다시 누진세율을 적용</strong>하므로, 부업 소득에는 월급 위에 얹힌 높은 세율(한계세율)이 붙습니다.
+부업에서 떼인 3.3%는 대부분 이보다 적어 5월에 차액을 더 내게 됩니다.</p>
+<h2>계산 방법</h2>
+<ol>
+  <li>부업 사업소득금액 = 수입 − 경비(단순경비율 또는 기준경비율)</li>
+  <li>합산 과세표준 = 연말정산 과세표준 + 부업 사업소득금액</li>
+  <li>산출세액 − 근로소득세액공제(근로소득 비율만큼) − 연말정산 때 받은 나머지 세액공제</li>
+  <li>추가 납부액 = 최종 세금 − (연말정산 결정세액 + 부업 3.3%)</li>
+</ol>
+<p>예: 총급여 5,000만원(과세표준 3,000만원)인 직장인이 부업으로 1,000만원을 벌면 부업 소득금액 ${won(njobSample.businessIncome)}에 세금이 ${won(njobSample.extraTax)} 늘고,
+3.3%로 ${won(njobSample.prepaid - 1_500_000 + njobSample.prepaidLocal - 150_000)}를 미리 냈으므로 5월에 약 <strong>${won(-njobSample.refund)}</strong>을 더 냅니다.</p>
+<h2>회사에 부업 사실이 알려지나요?</h2>
+<p>종합소득세 신고 자체는 회사에 통보되지 않습니다. 다만 부업 소득이 연 2,000만원(소득월액 기준)을 넘으면 건강보험료가 추가로 부과되는데, 이 고지서는 본인 주소로 갑니다.</p>`,
+    faq: [
+      ['부업 수입이 300만원 이하면 신고 안 해도 되나요?', '사업소득(3.3%)은 금액과 상관없이 근로소득과 합산 신고해야 합니다. 300만원 이하 분리과세 선택은 기타소득(8.8%)에만 해당합니다.'],
+      ['원천징수영수증은 어디서 보나요?', '홈택스 → 지급명세서 등 제출내역 → 근로소득 원천징수영수증, 또는 회사 인사팀에서 받을 수 있습니다.'],
+    ],
+    sources: [SRC.taxRate, SRC.decree143],
   },
   {
     slug: 'dependent',

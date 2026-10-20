@@ -143,3 +143,73 @@ export function checkDependent({
   const headroom = Math.min(20_000_000 - total, businessLimit - businessIncome);
   return { eligible: reasons.length === 0, total, reasons, headroom: Math.max(0, headroom) };
 }
+
+/* ───────── N잡 직장인: 근로소득 + 프리랜서 사업소득 합산 ───────── */
+
+/** 근로소득공제 (소득세법 제47조, 한도 2,000만원) */
+export function earnedIncomeDeduction(totalWage) {
+  const w = totalWage;
+  const d =
+    w <= 5_000_000 ? w * 0.7
+    : w <= 15_000_000 ? 3_500_000 + (w - 5_000_000) * 0.4
+    : w <= 45_000_000 ? 7_500_000 + (w - 15_000_000) * 0.15
+    : w <= 100_000_000 ? 12_000_000 + (w - 45_000_000) * 0.05
+    : 14_750_000 + (w - 100_000_000) * 0.02;
+  return Math.floor(Math.min(d, 20_000_000));
+}
+
+/** 근로소득세액공제 (소득세법 제59조). wageTax: 산출세액 중 근로소득 해당분 */
+export function earnedIncomeCredit(wageTax, totalWage) {
+  const credit = wageTax <= 1_300_000 ? wageTax * 0.55 : 715_000 + (wageTax - 1_300_000) * 0.3;
+  const w = totalWage;
+  const limit =
+    w <= 33_000_000 ? 740_000
+    : w <= 70_000_000 ? Math.max(660_000, 740_000 - (w - 33_000_000) * 0.008)
+    : w <= 120_000_000 ? Math.max(500_000, 660_000 - (w - 70_000_000) / 2)
+    : Math.max(200_000, 500_000 - (w - 120_000_000) / 2);
+  return Math.floor(Math.min(credit, limit));
+}
+
+/**
+ * 연말정산을 마친 직장인이 3.3% 부업 소득을 합쳐 5월에 신고할 때의 추가 납부(또는 환급) 추정.
+ * 근로소득 원천징수영수증의 값을 그대로 받아, 근로 쪽 소득공제·세액공제는 연말정산 결과를 유지한다고 본다.
+ * @param {{totalWage:number, wageTaxBase:number, wageDetermined:number, revenue:number, priorRevenue?:number,
+ *          rates:object, majorExpenses?:number, withheld?:number}} input
+ *   totalWage: 총급여, wageTaxBase: 종합소득 과세표준, wageDetermined: 결정세액(소득세)
+ */
+export function calcNjobTax({ totalWage, wageTaxBase, wageDetermined, revenue, priorRevenue = 0, rates, majorExpenses = 0, withheld }) {
+  const wageIncome = Math.max(0, totalWage - earnedIncomeDeduction(totalWage));
+  // 연말정산 때의 세액공제 중 근로소득세액공제를 뺀 나머지(자녀·특별·연금계좌 등)는 그대로 유지된다.
+  const wageComputed = progressiveTax(wageTaxBase);
+  const otherCredits = Math.max(0, wageComputed - earnedIncomeCredit(wageComputed, totalWage) - wageDetermined);
+
+  const business = estimatedIncome({ revenue, priorRevenue, rates, majorExpenses });
+  const taxBase = wageTaxBase + business.income;
+  const computed = progressiveTax(taxBase);
+  const totalIncome = wageIncome + business.income;
+  const wageShare = totalIncome > 0 ? wageIncome / totalIncome : 1;
+  const wageCredit = earnedIncomeCredit(computed * wageShare, totalWage);
+  const determined = floor10(Math.max(0, computed - wageCredit - otherCredits));
+  const local = floor10(determined * 0.1);
+
+  const prepaidBusiness = withheld ?? floor10(revenue * 0.03);
+  const prepaid = wageDetermined + prepaidBusiness;
+  const prepaidLocal = floor10(wageDetermined * 0.1) + floor10(prepaidBusiness * 0.1);
+  const refund = prepaid + prepaidLocal - (determined + local);
+  return {
+    ...business,
+    businessIncome: business.income,
+    wageIncome,
+    taxBase,
+    computed,
+    wageCredit,
+    otherCredits,
+    determined,
+    local,
+    prepaid,
+    prepaidLocal,
+    refund,
+    // 부업 소득 때문에 늘어난 세금(지방세 포함)
+    extraTax: determined + local - (wageDetermined + floor10(wageDetermined * 0.1)),
+  };
+}
