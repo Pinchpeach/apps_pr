@@ -146,3 +146,22 @@ test('세금 일정 D-day', async () => {
   assert.equal(may.ongoing, true);
   assert.equal(may.days, 21);
 });
+
+test('세금 일정 알림 시각', async () => {
+  const { reminderTimes } = await import('../src/calc/schedule.js');
+  const now = new Date(2026, 9, 20, 12); // 2026-10-20 12:00
+  const list = reminderTimes(now);
+  const first = list[0];
+  assert.equal(first.date.getFullYear(), 2026);
+  assert.equal(first.date.getMonth(), 10); // 11월
+  assert.equal(first.date.getDate(), 1);
+  assert.equal(first.date.getHours(), 9);
+  const due = list.find((r) => r.key === 'interim:due');
+  assert.equal(due.date.getDate(), 27); // 11/30 마감 3일 전
+  assert.ok(list.every((r) => r.date > now));
+  assert.equal(new Set(list.map((r) => r.key)).size, list.length);
+  // 진행 중인 일정의 이미 지난 시작 알림은 빠진다
+  const may = reminderTimes(new Date(2027, 4, 10, 12));
+  assert.equal(may.some((r) => r.key === 'income-tax:start'), false);
+  assert.equal(may.some((r) => r.key === 'income-tax:due'), true);
+});

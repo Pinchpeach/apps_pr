@@ -1,6 +1,10 @@
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { upcomingEvents } from '@/calc/schedule';
+import { Toggle } from '@/components/Fields';
 import { Notes, Paragraph } from '@/components/Result';
+import { cancelReminders, remindersSupported, scheduleReminders } from '@/notify/reminders';
+import { usePersistentState } from '@/storage/usePersistentState';
 import { Card, Screen } from '@/components/Screen';
 import { useTheme } from '@/theme';
 
@@ -9,8 +13,38 @@ const md = (d: Date) => `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`;
 export default function ScheduleScreen() {
   const t = useTheme();
   const events = upcomingEvents(new Date());
+  const [enabled, setEnabled] = usePersistentState('schedule.reminders', false);
+  const [status, setStatus] = useState('');
+
+  // 알림을 켜 둔 상태면 앱을 열 때마다 다음 일정으로 다시 예약한다.
+  useEffect(() => {
+    if (enabled) scheduleReminders().catch(() => {});
+  }, [enabled]);
+
+  const toggle = async (next: boolean) => {
+    if (!next) {
+      setEnabled(false);
+      await cancelReminders();
+      setStatus('알림을 껐습니다.');
+      return;
+    }
+    const count = await scheduleReminders().catch(() => null);
+    if (count === null) {
+      setStatus('알림 권한이 없어 켜지 못했습니다. 기기 설정에서 알림을 허용해 주세요.');
+      return;
+    }
+    setEnabled(true);
+    setStatus(`다음 일정 알림 ${count}개를 예약했습니다. 시작일과 마감 3일 전 오전 9시에 알려 드려요.`);
+  };
+
   return (
     <Screen title="세금 일정" subtitle="프리랜서·N잡러가 챙겨야 할 신고·납부 기간">
+      {remindersSupported ? (
+        <Card>
+          <Toggle label="마감 알림 받기 (시작일·마감 3일 전 오전 9시)" value={enabled} onChange={toggle} />
+          {status ? <Text style={{ color: t.muted, fontSize: 13 }}>{status}</Text> : null}
+        </Card>
+      ) : null}
       {events.map((e) => (
         <Card key={e.id}>
           <View style={styles.row}>
