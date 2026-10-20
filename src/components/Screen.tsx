@@ -4,13 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme';
 
 /** 탭 화면 공통 틀: 제목·설명 + 스크롤 본문 */
-export function Screen({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+export function Screen({ title, subtitle, children, underHeader = false }: { title: string; subtitle?: string; children: ReactNode; underHeader?: boolean }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <ScrollView
       style={{ backgroundColor: t.bg }}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
+      contentContainerStyle={[styles.content, { paddingTop: underHeader ? 16 : insets.top + 12 }]}
       keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <Text style={[styles.title, { color: t.text }]}>{title}</Text>

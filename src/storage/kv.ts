@@ -9,6 +9,10 @@ export function readItem(key: string): string | null {
   }
 }
 
+export async function clearAll() {
+  await Storage.clearAsync();
+}
+
 export function writeItem(key: string, value: string) {
   try {
     Storage.setItemSync(key, value);
