@@ -3,6 +3,7 @@ import { Collapsible, MoneyField, NumberField } from '@/components/Fields';
 import { METHOD_LABEL, useIndustry } from '@/components/Industry';
 import { Notes, Paragraph, Result } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
+import { LinkCard } from '@/components/LinkCard';
 import { usePersistentState } from '@/storage/usePersistentState';
 import { signedWon, won } from '@/format';
 
@@ -60,6 +61,7 @@ export default function RefundScreen() {
           <MoneyField label="노란우산공제 등 기타 소득공제" value={otherDeductions} onChange={setOtherDeductions} />
         </Collapsible>
       </Card>
+      <LinkCard href="/eitc" title="근로장려금도 받을 수 있을까?" body="연 수입이 적은 프리랜서는 5월에 근로장려금을 함께 신청할 수 있어요. 최대 165만원(단독가구)." />
       <Notes sources={SOURCES}>
         <Paragraph>
           장부 없이 신고하면 국세청 경비율로 경비를 인정합니다. 작년 수입 3,600만원 미만·올해 7,500만원 미만이면 단순경비율(수입의 약 60%를 경비로 인정), 그 밖에는

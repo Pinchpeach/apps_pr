@@ -6,6 +6,7 @@ import { Notes, Paragraph } from '@/components/Result';
 import { cancelReminders, remindersSupported, scheduleReminders } from '@/notify/reminders';
 import { usePersistentState } from '@/storage/usePersistentState';
 import { Card, Screen } from '@/components/Screen';
+import { LinkCard } from '@/components/LinkCard';
 import { useTheme } from '@/theme';
 
 const md = (d: Date) => `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`;
@@ -63,6 +64,7 @@ export default function ScheduleScreen() {
           <Text style={{ color: t.muted, fontSize: 13, lineHeight: 19 }}>{e.description}</Text>
         </Card>
       ))}
+      <LinkCard href="/eitc" title="근로장려금 예상액 계산" body="5월 정기 신청 전에 우리 가구가 대상인지, 얼마를 받을지 확인하세요." />
       <Notes>
         <Paragraph>마감일이 주말·공휴일이면 다음 영업일로 미뤄집니다. 정확한 기한은 홈택스 공지와 고지서를 확인하세요.</Paragraph>
       </Notes>
