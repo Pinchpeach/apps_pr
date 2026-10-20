@@ -108,3 +108,41 @@ test('N잡: 부업 소득이 없으면 추가 세금 0, 있으면 한계세율�
   assert.equal(r.extraTax, Math.floor((3_590_000 * 0.15) / 10) * 10 + Math.floor((3_590_000 * 0.15 * 0.1) / 10) * 10);
   assert.equal(r.refund, 300_000 + 30_000 - r.extraTax);
 });
+
+test('기타소득 8.8%와 과세최저한', async () => {
+  const { otherIncomeWithholding } = await import('../src/calc/freelancer.js');
+  assert.deepEqual(otherIncomeWithholding(1_000_000), { gross: 1_000_000, incomeAmount: 400_000, exempt: false, incomeTax: 80_000, localTax: 8_000, net: 912_000 });
+  assert.equal(otherIncomeWithholding(125_000).exempt, true);
+  assert.equal(otherIncomeWithholding(125_000).net, 125_000);
+  assert.equal(otherIncomeWithholding(125_010).exempt, false);
+});
+
+test('기타소득 분리과세 vs 종합과세', async () => {
+  const { compareOtherIncomeTaxation } = await import('../src/calc/freelancer.js');
+  // 다른 소득 없음: 소득금액 200만원 × 6% = 12만원 < 분리과세 40만원 → 종합과세 유리
+  const low = compareOtherIncomeTaxation({ annualGross: 5_000_000 });
+  assert.equal(low.incomeAmount, 2_000_000);
+  assert.equal(low.separate.tax, 400_000);
+  assert.equal(low.combined.tax, 120_000);
+  assert.equal(low.better, 'combined');
+  // 과세표준 1억원 직장인: 35% 구간 → 분리과세 유리
+  const high = compareOtherIncomeTaxation({ annualGross: 5_000_000, otherTaxBase: 100_000_000 });
+  assert.equal(high.combined.tax, 700_000);
+  assert.equal(high.better, 'separate');
+  // 소득금액 300만원 초과면 무조건 종합과세
+  assert.equal(compareOtherIncomeTaxation({ annualGross: 8_000_000 }).canSeparate, false);
+});
+
+test('세금 일정 D-day', async () => {
+  const { upcomingEvents } = await import('../src/calc/schedule.js');
+  const list = upcomingEvents(new Date(2026, 9, 20)); // 2026-10-20
+  const interim = list.find((e) => e.id === 'interim');
+  assert.equal(interim.ongoing, false);
+  assert.equal(interim.days, 12);
+  const income = list.find((e) => e.id === 'income-tax');
+  assert.equal(income.start.toISOString().slice(0, 10), '2027-05-01');
+  assert.equal(list[0].id, 'interim'); // 가장 가까운 일정이 먼저
+  const may = upcomingEvents(new Date(2027, 4, 10)).find((e) => e.id === 'income-tax');
+  assert.equal(may.ongoing, true);
+  assert.equal(may.days, 21);
+});

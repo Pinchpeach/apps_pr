@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { Link } from 'expo-router';
+import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/theme';
 
 export type Row = { label: string; value: string; tone?: 'total' | 'warn' | 'sum' };
@@ -29,8 +30,20 @@ export function Result({ caption, headline, tone = 'accent', note, rows }: { cap
           </View>
         ))}
       </View>
+      <Pressable
+        role="button"
+        onPress={() => Share.share({ message: shareText(caption, headline, note, rows) }).catch(() => {})}
+        style={[styles.share, { borderColor: t.line }]}>
+        <Text style={{ color: t.text, fontWeight: '700' }}>결과 공유</Text>
+      </Pressable>
     </View>
   );
+}
+
+function shareText(caption: string, headline: string, note: string | undefined, rows: Row[]) {
+  return [`[프리셈] ${caption}: ${headline}`, note, ...rows.map((r) => `· ${r.label}: ${r.value}`), '※ 법령 기준 추정치입니다.']
+    .filter(Boolean)
+    .join('\n');
 }
 
 /** 계산 근거·면책 */
@@ -44,6 +57,9 @@ export function Notes({ children, sources = [] }: { children?: ReactNode; source
           {label} ↗
         </Text>
       ))}
+      <Link href="/about" style={[styles.link, { color: t.accent }]}>
+        앱 정보 · 개인정보처리방침 · 입력값 초기화
+      </Link>
       <Text style={[styles.small, { color: t.muted }]}>
         계산 결과는 공개된 법령·고시에 따른 추정치이며 법적 효력이 없습니다. 입력한 숫자는 이 기기에서만 계산되고 어디로도 전송되지 않습니다.
       </Text>
@@ -68,4 +84,5 @@ const styles = StyleSheet.create({
   paragraph: { fontSize: 13, lineHeight: 20 },
   link: { fontSize: 13, fontWeight: '600' },
   small: { fontSize: 11, lineHeight: 16, marginTop: 4 },
+  share: { marginTop: 12, borderWidth: 1, borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
 });

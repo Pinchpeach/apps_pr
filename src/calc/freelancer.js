@@ -213,3 +213,38 @@ export function calcNjobTax({ totalWage, wageTaxBase, wageDetermined, revenue, p
     extraTax: determined + local - (wageDetermined + floor10(wageDetermined * 0.1)),
   };
 }
+
+/* ───────── 기타소득 (강연료·원고료 등 일시적 소득, 8.8%) ───────── */
+
+/**
+ * 기타소득 원천징수. 필요경비 60% 인정 → 기타소득금액 × 20% + 지방소득세 2% = 지급액의 8.8%.
+ * 건별 기타소득금액 5만원 이하는 과세최저한으로 세금이 없다(소득세법 제84조).
+ */
+export function otherIncomeWithholding(gross, expenseRate = 0.6) {
+  const incomeAmount = Math.floor(gross * (1 - expenseRate));
+  const exempt = incomeAmount <= 50_000;
+  const incomeTax = exempt ? 0 : floor10(incomeAmount * 0.2);
+  const localTax = floor10(incomeTax * 0.1);
+  return { gross, incomeAmount, exempt, incomeTax, localTax, net: gross - incomeTax - localTax };
+}
+
+/**
+ * 연간 기타소득금액 300만원 이하일 때 분리과세(20%로 끝)와 종합과세 중 유리한 쪽.
+ * otherTaxBase: 기타소득을 빼고 계산한 종합소득 과세표준(다른 소득이 없으면 0).
+ */
+export function compareOtherIncomeTaxation({ annualGross, otherTaxBase = 0, expenseRate = 0.6 }) {
+  const incomeAmount = Math.floor(annualGross * (1 - expenseRate));
+  const separate = floor10(incomeAmount * 0.2);
+  const combined = Math.max(0, progressiveTax(otherTaxBase + incomeAmount) - progressiveTax(otherTaxBase));
+  const canSeparate = incomeAmount <= 3_000_000;
+  const better = !canSeparate ? 'combined' : combined < separate ? 'combined' : 'separate';
+  return {
+    incomeAmount,
+    canSeparate,
+    separate: { tax: separate, local: floor10(separate * 0.1) },
+    combined: { tax: floor10(combined), local: floor10(floor10(combined) * 0.1) },
+    better,
+    // 종합과세를 고르면 떼인 세금과의 차이만큼 돌려받는다(기납부 = 분리과세 세액과 같다).
+    saving: canSeparate ? Math.max(0, separate - floor10(combined)) * 1.1 : 0,
+  };
+}

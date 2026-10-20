@@ -20,8 +20,9 @@ export default function TabLayout() {
       }}>
       <Tabs.Screen name="index" options={{ title: '환급 예상', tabBarIcon: icon('💸') }} />
       <Tabs.Screen name="njob" options={{ title: 'N잡 세금', tabBarIcon: icon('💼') }} />
-      <Tabs.Screen name="withholding" options={{ title: '3.3% 계산', tabBarIcon: icon('✂️') }} />
+      <Tabs.Screen name="withholding" options={{ title: '3.3%·8.8%', tabBarIcon: icon('✂️') }} />
       <Tabs.Screen name="dependent" options={{ title: '피부양자', tabBarIcon: icon('🛡️') }} />
+      <Tabs.Screen name="schedule" options={{ title: '세금 일정', tabBarIcon: icon('📅') }} />
     </Tabs>
   );
 }
