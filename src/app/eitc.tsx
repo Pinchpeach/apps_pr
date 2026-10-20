@@ -18,7 +18,7 @@ export default function EitcScreen() {
 
   const r = calcEitc({ type, businessRevenue, wage, spouseEarnings, otherIncome, property, late });
   const rows: Row[] = [
-    { label: '내 총급여액 등 (3.3% 수입 × 90% + 근로)', value: won(r.ownEarnings) },
+    { label: '내 총급여액 등', value: won(r.ownEarnings) },
     { label: '가구 총급여액 등', value: won(r.earnings) },
     { label: '가구 연간 총소득', value: won(r.totalIncome) },
   ];
