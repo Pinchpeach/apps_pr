@@ -3,7 +3,7 @@
     "name": "프리셈",
     "slug": "freesem",
     "scheme": "freesem",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -37,7 +37,15 @@
           "imageWidth": 200
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#5b4bff",
+          "enableRemoteNotifications": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
