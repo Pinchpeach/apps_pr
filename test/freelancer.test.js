@@ -85,3 +85,26 @@ test('건강보험 피부양자 판정', () => {
   assert.equal(checkDependent({ businessIncome: 0, registered: false, financialIncome: 9_000_000 }).total, 0);
   assert.equal(checkDependent({ businessIncome: 3_000_000, registered: false, wageIncome: 8_000_000, propertyBase: 600_000_000 }).eligible, false);
 });
+
+test('N잡: 근로소득공제·근로소득세액공제', async () => {
+  const { earnedIncomeDeduction, earnedIncomeCredit } = await import('../src/calc/freelancer.js');
+  assert.equal(earnedIncomeDeduction(50_000_000), 12_250_000);
+  assert.equal(earnedIncomeDeduction(200_000_000), 16_750_000);
+  assert.equal(earnedIncomeCredit(1_000_000, 30_000_000), 550_000);
+  assert.equal(earnedIncomeCredit(3_000_000, 50_000_000), 660_000);
+  assert.equal(earnedIncomeCredit(3_000_000, 34_000_000), 732_000);
+});
+
+test('N잡: 부업 소득이 없으면 추가 세금 0, 있으면 한계세율만큼 증가', async () => {
+  const { calcNjobTax } = await import('../src/calc/freelancer.js');
+  const base = { totalWage: 50_000_000, wageTaxBase: 30_000_000, wageDetermined: 1_500_000, rates };
+  for (const wage of [base, { ...base, totalWage: 28_000_000, wageTaxBase: 15_000_000, wageDetermined: 200_000 }]) {
+    const zero = calcNjobTax({ ...wage, revenue: 0 });
+    assert.equal(zero.extraTax, 0);
+    assert.equal(zero.refund, 0);
+  }
+  const r = calcNjobTax({ ...base, revenue: 10_000_000 });
+  assert.equal(r.businessIncome, 3_590_000);
+  assert.equal(r.extraTax, Math.floor((3_590_000 * 0.15) / 10) * 10 + Math.floor((3_590_000 * 0.15 * 0.1) / 10) * 10);
+  assert.equal(r.refund, 300_000 + 30_000 - r.extraTax);
+});
