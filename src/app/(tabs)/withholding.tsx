@@ -1,13 +1,13 @@
-import { useState } from 'react';
 import { grossFromNet, withholding33 } from '@/calc/freelancer';
 import { MoneyField, Segmented } from '@/components/Fields';
 import { Notes, Paragraph, Result } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
+import { usePersistentState } from '@/storage/usePersistentState';
 import { won } from '@/format';
 
 export default function WithholdingScreen() {
-  const [mode, setMode] = useState<'net' | 'gross'>('net');
-  const [amount, setAmount] = useState(1_000_000);
+  const [mode, setMode] = usePersistentState<'net' | 'gross'>('withholding.mode', 'net');
+  const [amount, setAmount] = usePersistentState('withholding.amount', 1_000_000);
   const toNet = mode === 'net';
   const r = toNet ? withholding33(amount) : grossFromNet(amount);
 

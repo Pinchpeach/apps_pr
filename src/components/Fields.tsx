@@ -92,14 +92,14 @@ export function Segmented<T extends string>({
   return (
     <View style={styles.field}>
       {label ? <Text style={[styles.label, { color: t.text }]}>{label}</Text> : null}
-      <View style={styles.segments} accessibilityRole="radiogroup">
+      <View style={styles.segments} role="radiogroup" aria-label={label}>
         {options.map(([key, text]) => {
           const active = key === value;
           return (
             <Pressable
               key={key}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: active }}
+              role="radio"
+              aria-checked={active}
               onPress={() => onChange(key)}
               style={[
                 styles.segment,
@@ -117,7 +117,7 @@ export function Segmented<T extends string>({
 export function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   const t = useTheme();
   return (
-    <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: value }} onPress={() => onChange(!value)} style={styles.toggle}>
+    <Pressable role="checkbox" aria-checked={value} aria-label={label} onPress={() => onChange(!value)} style={styles.toggle}>
       <View style={[styles.box, { borderColor: value ? t.accent : t.line, backgroundColor: value ? t.accent : 'transparent' }]}>
         {value ? <Text style={{ color: t.onAccent, fontWeight: '800', fontSize: 13 }}>✓</Text> : null}
       </View>
@@ -132,7 +132,7 @@ export function Collapsible({ title, children }: { title: string; children: Reac
   const [open, setOpen] = useState(false);
   return (
     <View style={[styles.collapsible, { borderColor: t.line }]}>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)}>
+      <Pressable role="button" aria-expanded={open} onPress={() => setOpen(!open)}>
         <Text style={{ color: t.accent, fontWeight: '700' }}>
           {open ? '▾' : '▸'} {title}
         </Text>

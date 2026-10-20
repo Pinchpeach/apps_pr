@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { calcIncomeTaxRefund, SIMPLE_RATE_LIMITS } from '@/calc/freelancer';
 import { Collapsible, MoneyField, NumberField } from '@/components/Fields';
 import { METHOD_LABEL, useIndustry } from '@/components/Industry';
 import { Notes, Paragraph, Result } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
+import { usePersistentState } from '@/storage/usePersistentState';
 import { signedWon, won } from '@/format';
 
 const SOURCES: [string, string][] = [
@@ -12,14 +12,14 @@ const SOURCES: [string, string][] = [
 ];
 
 export default function RefundScreen() {
-  const [revenue, setRevenue] = useState(20_000_000);
-  const [priorRevenue, setPriorRevenue] = useState(0);
-  const [majorExpenses, setMajorExpenses] = useState(0);
-  const [dependents, setDependents] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [pensionPaid, setPensionPaid] = useState(0);
-  const [otherDeductions, setOtherDeductions] = useState(0);
-  const { rates, picker } = useIndustry();
+  const [revenue, setRevenue] = usePersistentState('refund.revenue', 20_000_000);
+  const [priorRevenue, setPriorRevenue] = usePersistentState('refund.priorRevenue', 0);
+  const [majorExpenses, setMajorExpenses] = usePersistentState('refund.majorExpenses', 0);
+  const [dependents, setDependents] = usePersistentState('refund.dependents', 1);
+  const [children, setChildren] = usePersistentState('refund.children', 0);
+  const [pensionPaid, setPensionPaid] = usePersistentState('refund.pensionPaid', 0);
+  const [otherDeductions, setOtherDeductions] = usePersistentState('refund.otherDeductions', 0);
+  const { rates, picker } = useIndustry('refund');
 
   const r = calcIncomeTaxRefund({ revenue, priorRevenue, rates, majorExpenses, dependents, children, pensionPaid, otherDeductions });
   const refund = r.refund >= 0;

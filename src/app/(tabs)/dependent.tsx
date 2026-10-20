@@ -1,18 +1,18 @@
-import { useState } from 'react';
 import { checkDependent } from '@/calc/freelancer';
 import { Collapsible, MoneyField, NumberField, Segmented } from '@/components/Fields';
 import { Notes, Paragraph, Result, type Row } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
+import { usePersistentState } from '@/storage/usePersistentState';
 import { won } from '@/format';
 
 export default function DependentScreen() {
-  const [registered, setRegistered] = useState<'no' | 'yes'>('no');
-  const [revenue, setRevenue] = useState(12_000_000);
-  const [expenseRate, setExpenseRate] = useState(64.1);
-  const [wageIncome, setWageIncome] = useState(0);
-  const [pensionIncome, setPensionIncome] = useState(0);
-  const [financialIncome, setFinancialIncome] = useState(0);
-  const [propertyBase, setPropertyBase] = useState(0);
+  const [registered, setRegistered] = usePersistentState<'no' | 'yes'>('dependent.registered', 'no');
+  const [revenue, setRevenue] = usePersistentState('dependent.revenue', 12_000_000);
+  const [expenseRate, setExpenseRate] = usePersistentState('dependent.expenseRate', 64.1);
+  const [wageIncome, setWageIncome] = usePersistentState('dependent.wageIncome', 0);
+  const [pensionIncome, setPensionIncome] = usePersistentState('dependent.pensionIncome', 0);
+  const [financialIncome, setFinancialIncome] = usePersistentState('dependent.financialIncome', 0);
+  const [propertyBase, setPropertyBase] = usePersistentState('dependent.propertyBase', 0);
 
   const businessIncome = Math.floor(revenue * (1 - expenseRate / 100));
   const r = checkDependent({ businessIncome, registered: registered === 'yes', wageIncome, pensionIncome, financialIncome, propertyBase });
