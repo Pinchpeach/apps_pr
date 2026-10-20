@@ -33,16 +33,21 @@ export function upcomingEvents(today) {
 
 /**
  * 일정별 알림 시각: 시작일 오전 9시, 마감 3일 전 오전 9시(현지 시각). now 이후만 돌려준다.
+ * 진행 중인 일정이 있어도 다음 해 알림이 빠지지 않도록 다음 일정과 그다음 해 일정을 함께 만든다.
  * @returns {{key:string, title:string, body:string, date:Date}[]}
  */
 export function reminderTimes(now) {
   const out = [];
   for (const e of upcomingEvents(now)) {
-    const startLocal = new Date(e.start.getUTCFullYear(), e.start.getUTCMonth(), e.start.getUTCDate(), 9);
-    const endLocal = new Date(e.end.getUTCFullYear(), e.end.getUTCMonth(), e.end.getUTCDate() - 3, 9);
-    const range = `${e.start.getUTCMonth() + 1}월 ${e.start.getUTCDate()}일 ~ ${e.end.getUTCMonth() + 1}월 ${e.end.getUTCDate()}일`;
-    out.push({ key: `${e.id}:start`, title: `${e.title} 시작`, body: `${range}. ${e.description}`, date: startLocal });
-    out.push({ key: `${e.id}:due`, title: `${e.title} 마감 3일 전`, body: `${e.end.getUTCMonth() + 1}월 ${e.end.getUTCDate()}일 마감입니다. ${e.description}`, date: endLocal });
+    for (const offset of [0, 1]) {
+      const y = e.start.getUTCFullYear() + offset;
+      const [, , sm, sd, em, ed] = TAX_EVENTS.find(([id]) => id === e.id);
+      const startLocal = new Date(y, sm - 1, sd, 9);
+      const endLocal = new Date(y, em - 1, ed - 3, 9);
+      const range = `${sm}월 ${sd}일 ~ ${em}월 ${ed}일`;
+      out.push({ key: `${e.id}:${y}:start`, title: `${e.title} 시작`, body: `${range}. ${e.description}`, date: startLocal });
+      out.push({ key: `${e.id}:${y}:due`, title: `${e.title} 마감 3일 전`, body: `${em}월 ${ed}일 마감입니다. ${e.description}`, date: endLocal });
+    }
   }
   return out.filter((r) => r.date > now).sort((a, b) => a.date - b.date);
 }

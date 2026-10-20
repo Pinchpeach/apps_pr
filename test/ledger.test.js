@@ -49,3 +49,11 @@ test('CSV 내보내기', async () => {
   assert.ok(lines.includes('2026-05-01,"쉼표, ""따옴표""",사업소득 3.3%,100000,3000,300,96700'));
   assert.ok(lines.includes('2026-03-20,강연,기타소득 8.8%,500000,40000,4000,456000'));
 });
+
+test('리뷰 #2: 사업소득 원천징수 세액 따로 집계 (소액부징수 반영)', () => {
+  const small = Array.from({ length: 10 }, (_, i) => ({ id: String(i), date: '2026-06-01', payer: 'X', gross: 30_000, kind: 'business' }));
+  const s = summarizeYear([...small, { id: 'o', date: '2026-06-02', payer: '강연', gross: 500_000, kind: 'other' }], 2026);
+  assert.equal(s.business, 300_000);
+  assert.equal(s.businessWithheld, 0);
+  assert.equal(s.withheldIncomeTax, 40_000);
+});

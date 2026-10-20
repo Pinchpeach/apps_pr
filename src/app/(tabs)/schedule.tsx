@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { upcomingEvents } from '@/calc/schedule';
 import { Toggle } from '@/components/Fields';
@@ -17,10 +17,11 @@ export default function ScheduleScreen() {
   const [enabled, setEnabled] = usePersistentState('schedule.reminders', false);
   const [status, setStatus] = useState('');
 
-  // 알림을 켜 둔 상태면 앱을 열 때마다 다음 일정으로 다시 예약한다.
+  // 알림을 켜 둔 상태면 화면을 처음 열 때 다음 일정으로 다시 예약한다(토글로 켠 직후에는 중복 예약하지 않음).
+  const enabledAtMount = useRef(enabled);
   useEffect(() => {
-    if (enabled) scheduleReminders().catch(() => {});
-  }, [enabled]);
+    if (enabledAtMount.current) scheduleReminders().catch(() => {});
+  }, []);
 
   const toggle = async (next: boolean) => {
     if (!next) {

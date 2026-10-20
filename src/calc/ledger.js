@@ -9,11 +9,12 @@ import { otherIncomeWithholding, withholding33 } from './freelancer.js';
 /** 기록 목록 → 해당 연도 합계 */
 export function summarizeYear(entries, year) {
   const rows = entries.filter((e) => e.date.startsWith(`${year}-`));
-  const sum = { business: 0, other: 0, withheldIncomeTax: 0, withheldLocalTax: 0, net: 0, count: rows.length };
+  const sum = { business: 0, other: 0, withheldIncomeTax: 0, withheldLocalTax: 0, businessWithheld: 0, net: 0, count: rows.length };
   for (const e of rows) {
     const w = e.kind === 'other' ? otherIncomeWithholding(e.gross) : withholding33(e.gross);
     sum[e.kind] += e.gross;
     sum.withheldIncomeTax += w.incomeTax;
+    if (e.kind === 'business') sum.businessWithheld += w.incomeTax;
     sum.withheldLocalTax += w.localTax;
     sum.net += w.net;
   }

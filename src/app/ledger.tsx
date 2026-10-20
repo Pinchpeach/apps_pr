@@ -14,7 +14,12 @@ const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-const validDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
+const validDate = (s: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return false;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.getFullYear() === Number(m[1]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3]);
+};
 
 export default function LedgerScreen() {
   const t = useTheme();
@@ -42,6 +47,7 @@ export default function LedgerScreen() {
   };
   const apply = () => {
     setPersistentValue('refund.revenue', s.business);
+    setPersistentValue('refund.ledgerWithheld', { revenue: s.business, withheld: s.businessWithheld });
     setPersistentValue('dependent.revenue', s.business);
     setPersistentValue('eitc.businessRevenue', s.business);
     setPersistentValue('withholding.annualOther', s.other);
