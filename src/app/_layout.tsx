@@ -10,6 +10,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="about" options={{ title: '앱 정보', headerBackTitle: '뒤로' }} />
+        <Stack.Screen name="eitc" options={{ title: '근로장려금', headerBackTitle: '뒤로' }} />
       </Stack>
     </>
   );
