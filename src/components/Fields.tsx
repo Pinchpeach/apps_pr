@@ -73,8 +73,9 @@ export function NumberField({
 }) {
   const t = useTheme();
   const [text, setText] = useState(String(value));
-  // 외부에서 값이 바뀌면(업종 프리셋 등) 입력란도 따라간다.
-  const shown = Number(text) === value ? text : String(value);
+  // 외부에서 값이 바뀌면(업종 프리셋 등) 입력란도 따라간다. 단, 비운 칸이나 "3." 처럼 입력 중인 글자는 그대로 둔다.
+  const pending = text === '' || text === '.' || text.endsWith('.');
+  const shown = pending || Number(text) === value ? text : String(value);
   return (
     <Label label={label} hint={hint}>
       <View style={[styles.inputRow, { backgroundColor: t.bg, borderColor: t.line }]}>

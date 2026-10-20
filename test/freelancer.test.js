@@ -156,12 +156,32 @@ test('세금 일정 알림 시각', async () => {
   assert.equal(first.date.getMonth(), 10); // 11월
   assert.equal(first.date.getDate(), 1);
   assert.equal(first.date.getHours(), 9);
-  const due = list.find((r) => r.key === 'interim:due');
+  const due = list.find((r) => r.key === 'interim:2026:due');
   assert.equal(due.date.getDate(), 27); // 11/30 마감 3일 전
   assert.ok(list.every((r) => r.date > now));
   assert.equal(new Set(list.map((r) => r.key)).size, list.length);
   // 진행 중인 일정의 이미 지난 시작 알림은 빠진다
   const may = reminderTimes(new Date(2027, 4, 10, 12));
-  assert.equal(may.some((r) => r.key === 'income-tax:start'), false);
-  assert.equal(may.some((r) => r.key === 'income-tax:due'), true);
+  assert.equal(may.some((r) => r.key === 'income-tax:2027:start'), false);
+  assert.equal(may.some((r) => r.key === 'income-tax:2027:due'), true);
+  // 리뷰 #3: 신고 기간 중에 켜도 다음 해 알림이 예약된다
+  const late = reminderTimes(new Date(2026, 4, 29, 12));
+  assert.ok(late.some((r) => r.key === 'income-tax:2027:start'));
+  assert.ok(late.some((r) => r.key === 'earned-credit:2027:due'));
+});
+
+test('리뷰 수정: 소액부징수 역산·피부양자 재산 여유·절약액 정수', async () => {
+  const { grossFromNet, checkDependent, compareOtherIncomeTaxation, calcIncomeTaxRefund } = await import('../src/calc/freelancer.js');
+  // #6: 세금이 안 붙는 금액은 그대로
+  assert.equal(grossFromNet(32_500).gross, 32_500);
+  assert.equal(grossFromNet(33_333).gross, 33_333);
+  assert.equal(grossFromNet(33_334).net >= 33_334, true);
+  // #4: 재산 5.4억 초과면 소득 1,000만원까지만 여유
+  assert.equal(checkDependent({ businessIncome: 3_000_000, registered: false, propertyBase: 600_000_000 }).headroom, 2_000_000);
+  // minor: 절약액 정수
+  assert.equal(Number.isInteger(compareOtherIncomeTaxation({ annualGross: 7_000_000 }).saving), true);
+  // #2: 실제로 떼인 세금이 0이면 환급도 없다(추가 납부 여부만)
+  const r = calcIncomeTaxRefund({ revenue: 3_000_000, rates: INDUSTRY_PRESETS[0], withheld: 0 });
+  assert.equal(r.prepaid, 0);
+  assert.ok(r.refund <= 0);
 });

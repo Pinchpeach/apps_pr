@@ -47,3 +47,9 @@ test('근로·연금 50%, 이자·배당 1,000만원 이하 제외, 상한', () 
   assert.equal(r.annualIncome, 18_000_000);
   assert.equal(calcRegionalPremium({ business: 5e10 }).health, NHI.maxPremium);
 });
+
+test('리뷰 #7: 하한 바로 위 소득도 최저보험료 아래로 내려가지 않는다', () => {
+  const r = calcRegionalPremium({ business: 280_100 * 12 });
+  assert.equal(r.incomeMonthly, 280_100);
+  assert.equal(r.incomePremium, NHI.minPremium);
+});

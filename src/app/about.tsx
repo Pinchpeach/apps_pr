@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text } from 'react-native';
 import { Paragraph } from '@/components/Result';
 import { Card, Screen } from '@/components/Screen';
-import { clearAll } from '@/storage/kv';
+import { resetAllPersistent } from '@/storage/usePersistentState';
 import { useTheme } from '@/theme';
 
 const LINKS: [string, string][] = [
@@ -35,11 +35,11 @@ export default function AboutScreen() {
       <Pressable
         role="button"
         onPress={async () => {
-          await clearAll();
+          await resetAllPersistent();
           setCleared(true);
         }}
         style={[styles.reset, { borderColor: t.warn }]}>
-        <Text style={{ color: t.warn, fontWeight: '700' }}>{cleared ? '초기화했습니다. 앱을 다시 열면 기본값으로 시작합니다.' : '저장된 입력값 모두 지우기'}</Text>
+        <Text style={{ color: t.warn, fontWeight: '700' }}>{cleared ? '모든 입력값과 수입 기록을 지웠습니다.' : '저장된 입력값·수입 기록 모두 지우기'}</Text>
       </Pressable>
       <Paragraph>계산 결과는 추정치이며 법적 효력이 없습니다. 실제 신고는 홈택스 또는 세무 전문가에게 확인하세요.</Paragraph>
     </Screen>

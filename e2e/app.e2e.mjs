@@ -111,3 +111,37 @@ test('수입 기록: 추가 → 합계 → 환급 탭에 반영', async () => {
   assert.deepEqual(await page.locator('[role=heading]:visible').allTextContents(), ['수입 기록', '10,000,000원']);
   assert.deepEqual(errors, []);
 });
+
+test('리뷰 #1: 숫자 칸을 지우고 다시 입력하면 그 값이 된다', async () => {
+  const { page, errors } = await open('/');
+  await page.getByRole('button', { name: /공제 입력/ }).click();
+  const field = page.getByLabel('기본공제 인원 (본인 포함)');
+  await field.click();
+  await field.press('End');
+  await field.press('Backspace');
+  await field.pressSequentially('3');
+  assert.equal(await field.inputValue(), '3');
+  assert.deepEqual(errors, []);
+});
+
+test('리뷰 #9·#5: 없는 날짜는 추가 불가, 전체 초기화는 열린 화면에도 반영', async () => {
+  const { page, errors } = await open('/ledger', 'text=새 기록');
+  await page.getByLabel('세전 지급액').fill('1000000');
+  await page.getByLabel('받은 날짜').fill('2026-02-31');
+  assert.equal(await page.getByRole('button', { name: '기록 추가' }).isDisabled(), true);
+  await page.getByLabel('받은 날짜').fill('2026-02-28');
+  await page.getByRole('button', { name: '기록 추가' }).click();
+  await page.getByRole('radio', { name: '2026년' }).click();
+  assert.notEqual((await page.locator('[role=heading]:visible').allTextContents())[1], '0원');
+  // 열려 있는 탭 화면(환급)에서 값을 바꾼 뒤, 새로고침 없이 앱 안에서 앱 정보로 가서 전체 초기화
+  await page.goto(base + '/');
+  const revenue = page.getByLabel('올해 프리랜서 총수입 (3.3% 떼기 전)');
+  await revenue.fill('30000000');
+  await page.getByText('앱 정보 · 개인정보처리방침 · 입력값 초기화').click();
+  await page.getByRole('button', { name: /모두 지우기/ }).click();
+  await page.getByText('지웠습니다').waitFor();
+  await page.goBack();
+  await revenue.waitFor();
+  assert.equal(await revenue.inputValue(), '20,000,000');
+  assert.deepEqual(errors, []);
+});

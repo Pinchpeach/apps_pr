@@ -20,9 +20,12 @@ export default function RefundScreen() {
   const [children, setChildren] = usePersistentState('refund.children', 0);
   const [pensionPaid, setPensionPaid] = usePersistentState('refund.pensionPaid', 0);
   const [otherDeductions, setOtherDeductions] = usePersistentState('refund.otherDeductions', 0);
+  const [ledgerWithheld] = usePersistentState<{ revenue: number; withheld: number } | null>('refund.ledgerWithheld', null);
   const { rates, picker } = useIndustry('refund');
+  // 수입 기록에서 가져온 수입이 그대로면 실제 떼인 세액(소액부징수 반영)을 쓴다.
+  const withheld = ledgerWithheld && ledgerWithheld.revenue === revenue ? ledgerWithheld.withheld : undefined;
 
-  const r = calcIncomeTaxRefund({ revenue, priorRevenue, rates, majorExpenses, dependents, children, pensionPaid, otherDeductions });
+  const r = calcIncomeTaxRefund({ revenue, priorRevenue, rates, majorExpenses, dependents, children, pensionPaid, otherDeductions, withheld });
   const refund = r.refund >= 0;
 
   return (
@@ -39,7 +42,7 @@ export default function RefundScreen() {
           { label: '산출세액', value: won(r.computed) },
           { label: '세액공제', value: `-${won(r.credits)}` },
           { label: '낼 세금 (지방세 포함)', value: won(r.determined + r.local), tone: 'sum' },
-          { label: '이미 떼인 3.3%', value: won(r.prepaid + r.prepaidLocal) },
+          { label: withheld === undefined ? '이미 떼인 3.3%' : '이미 떼인 세금 (수입 기록)', value: won(r.prepaid + r.prepaidLocal) },
         ]}
       />
       <LinkCard href="/ledger" title="수입 기록으로 자동 합산" body="지급받을 때마다 기록해 두면 연간 수입을 직접 더하지 않아도 됩니다." />

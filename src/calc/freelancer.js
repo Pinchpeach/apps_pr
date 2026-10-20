@@ -34,6 +34,8 @@ export function withholding33(gross) {
 
 /** 받고 싶은 실수령액 → 필요한 세전 금액 */
 export function grossFromNet(net) {
+  // 소액부징수 구간(소득세 1,000원 미만)에서는 세금이 없으므로 받을 금액 그대로가 최소 세전 금액이다.
+  if (withholding33(net).incomeTax === 0) return withholding33(net);
   let gross = Math.ceil(net / 0.967);
   while (withholding33(gross).net < net) gross++;
   while (gross > 0 && withholding33(gross - 1).net >= net) gross--;
@@ -140,7 +142,8 @@ export function checkDependent({
   if (propertyBase > 900_000_000) reasons.push('재산세 과세표준이 9억원을 넘습니다.');
   else if (propertyBase > 540_000_000 && total > 10_000_000) reasons.push('재산세 과세표준 5.4억원 초과이면서 소득이 1,000만원을 넘습니다.');
   const businessLimit = registered ? 0 : 5_000_000;
-  const headroom = Math.min(20_000_000 - total, businessLimit - businessIncome);
+  let headroom = Math.min(20_000_000 - total, businessLimit - businessIncome);
+  if (propertyBase > 540_000_000) headroom = Math.min(headroom, 10_000_000 - total);
   return { eligible: reasons.length === 0, total, reasons, headroom: Math.max(0, headroom) };
 }
 
@@ -245,6 +248,6 @@ export function compareOtherIncomeTaxation({ annualGross, otherTaxBase = 0, expe
     combined: { tax: floor10(combined), local: floor10(floor10(combined) * 0.1) },
     better,
     // 종합과세를 고르면 떼인 세금과의 차이만큼 돌려받는다(기납부 = 분리과세 세액과 같다).
-    saving: canSeparate ? Math.max(0, separate - floor10(combined)) * 1.1 : 0,
+    saving: canSeparate ? Math.round(Math.max(0, separate - floor10(combined)) * 1.1) : 0,
   };
 }

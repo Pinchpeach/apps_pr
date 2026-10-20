@@ -1,10 +1,12 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
-import { readItem, writeItem } from './kv';
+import { clearAll, readItem, writeItem } from './kv';
 
 const PREFIX = 'freesem:v1:';
 
 // 같은 키를 쓰는 화면끼리 값을 맞추기 위한 구독자 목록 (예: 수입 기록 → 환급 탭)
 const listeners = new Map<string, Set<(json: string) => void>>();
+// 키별 기본값 (전체 초기화 때 열려 있는 화면을 기본값으로 되돌리기 위해)
+const initials = new Map<string, string>();
 
 function read<T>(key: string, initial: T): T {
   const stored = readItem(PREFIX + key);
@@ -26,6 +28,7 @@ export function setPersistentValue<T>(key: string, value: T) {
 /** useState와 같지만 값을 기기에 저장해 앱을 다시 열어도 유지하고, 같은 키를 쓰는 화면끼리 동기화한다. */
 export function usePersistentState<T>(key: string, initial: T): [T, Dispatch<SetStateAction<T>>] {
   const [value, setValue] = useState<T>(() => read(key, initial));
+  if (!initials.has(key)) initials.set(key, JSON.stringify(initial));
 
   useEffect(() => {
     const notify = (json: string) => {
@@ -44,4 +47,13 @@ export function usePersistentState<T>(key: string, initial: T): [T, Dispatch<Set
   }, [key, value]);
 
   return [value, setValue];
+}
+
+/** 저장된 입력값을 모두 지우고, 열려 있는 화면도 기본값으로 되돌린다. */
+export async function resetAllPersistent() {
+  await clearAll();
+  for (const [key, set] of listeners) {
+    const json = initials.get(key);
+    if (json !== undefined) set.forEach((notify) => notify(json));
+  }
 }

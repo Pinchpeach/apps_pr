@@ -46,7 +46,7 @@ export function calcRegionalPremium({
   const financial = interestDividend > 10_000_000 ? interestDividend : 0;
   const annualIncome = business + other + financial + (wage + pension) * 0.5;
   const incomeMonthly = Math.floor(annualIncome / 12);
-  const incomePremium = incomeMonthly <= NHI.minIncomeMonthly ? NHI.minPremium : floor10(incomeMonthly * NHI.rate);
+  const incomePremium = incomeMonthly <= NHI.minIncomeMonthly ? NHI.minPremium : Math.max(NHI.minPremium, floor10(incomeMonthly * NHI.rate));
 
   const lease = leaseValue(leaseDeposit, leaseMonthly);
   const points = propertyPoints(propertyBase + lease);
