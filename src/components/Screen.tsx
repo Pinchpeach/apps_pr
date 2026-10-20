@@ -13,7 +13,8 @@ export function Screen({ title, subtitle, children, underHeader = false }: { tit
       contentContainerStyle={[styles.content, { paddingTop: underHeader ? 16 : insets.top + 12 }]}
       keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
-        <Text style={[styles.title, { color: t.text }]}>{title}</Text>
+        {/* 상단 헤더가 있는 화면은 헤더에 제목이 이미 있으므로 본문 제목을 생략한다. */}
+        {underHeader ? null : <Text style={[styles.title, { color: t.text }]}>{title}</Text>}
         {subtitle ? <Text style={[styles.subtitle, { color: t.muted }]}>{subtitle}</Text> : null}
       </View>
       {children}
