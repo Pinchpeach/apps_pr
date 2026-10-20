@@ -42,6 +42,7 @@ export default function RefundScreen() {
           { label: '이미 떼인 3.3%', value: won(r.prepaid + r.prepaidLocal) },
         ]}
       />
+      <LinkCard href="/ledger" title="수입 기록으로 자동 합산" body="지급받을 때마다 기록해 두면 연간 수입을 직접 더하지 않아도 됩니다." />
       <Card>
         <MoneyField label="올해 프리랜서 총수입 (3.3% 떼기 전)" value={revenue} onChange={setRevenue} />
         <MoneyField
