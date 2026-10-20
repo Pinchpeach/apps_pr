@@ -10,8 +10,8 @@ const env = process.env;
 const basePath = `/${(env.BASE_PATH ?? '/').replace(/^\/+|\/+$/g, '')}/`.replace('//', '/');
 
 export const site = {
-  name: '머니계산기',
-  tagline: '연봉·대출·적금·퇴직금, 2026년 기준으로 정확하게',
+  name: '프리셈',
+  tagline: '프리랜서·N잡러를 위한 세금·보험 계산 앱',
   url: (env.SITE_URL || 'https://example.com').replace(/\/+$/, ''),
   basePath,
   adsenseClient: env.ADSENSE_CLIENT || '',
