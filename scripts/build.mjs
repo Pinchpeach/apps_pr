@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { pages } from '../src/pages.js';
@@ -14,7 +14,8 @@ async function emit(path, html) {
   await writeFile(file, html);
 }
 
-const nav = pages.filter((p) => ['salary', 'loan', 'savings', 'acquisition-tax', 'severance', 'unemployment', 'brokerage', 'wage'].includes(p.slug));
+// 상단·하단 메뉴는 앱의 주 기능(프리랜서·N잡)만 노출한다.
+const nav = pages.filter((p) => p.category === '프리랜서·N잡');
 
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
@@ -46,10 +47,11 @@ await emit(
   'index.html',
   renderPage({
     title: `${site.name} — ${site.tagline}`,
-    description: '2026년 기준 연봉 실수령액, 대출이자, 적금 이자, 퇴직금, 부동산 중개수수료, 시급·주휴수당 계산기를 무료로 제공합니다. 국세청 간이세액표 원문을 그대로 적용합니다.',
+    description: '3.3% 떼이는 프리랜서·N잡러를 위한 무료 계산 앱. 3.3% 세전·세후, 5월 종합소득세 환급 예상액, 건강보험 피부양자 탈락 여부를 2026년 법령 기준으로 바로 계산합니다.',
     path: '',
     depth: 0,
     nav,
+    scripts: ['js/client/install.js'],
     jsonLd: [
       {
         '@context': 'https://schema.org',
@@ -60,12 +62,26 @@ await emit(
       },
     ],
     main: `<section class="hero">
-<h1>${site.name}</h1>
-<p class="lead">${site.tagline}. 법령·고시 원문을 기준으로 계산하고, 근거와 기준일을 페이지마다 밝힙니다.</p>
+<p class="eyebrow">${site.tagline}</p>
+<h1>3.3% 떼였다면,<br>얼마 돌려받을지부터.</h1>
+<p class="lead">법령 원문으로 계산하고 근거를 밝힙니다. 입력한 숫자는 기기 밖으로 나가지 않습니다.</p>
 </section>
-${categories
+<section class="features" aria-label="주요 기능">
+${nav
   .map(
-    (c) => `<section class="category"><h2>${c}</h2><div class="tiles">${pages
+    (p) => `<a class="feature" href="./${p.slug}/"><span class="feature-icon" aria-hidden="true">${p.icon}</span><strong>${p.h1}</strong><span>${p.description.split('. ')[0].replace(/\.$/, '')}.</span><span class="go" aria-hidden="true">→</span></a>`,
+  )
+  .join('')}
+</section>
+<section class="install card" id="install" hidden>
+<div><strong>홈 화면에 추가</strong><p>앱처럼 바로 열고, 인터넷이 없어도 계산할 수 있어요.</p></div>
+<button type="button" class="btn primary" data-install>설치</button>
+</section>
+<h2 id="all">전체 계산기</h2>
+${categories
+  .filter((c) => c !== '프리랜서·N잡')
+  .map(
+    (c) => `<section class="category"><h3>${c}</h3><div class="tiles">${pages
       .filter((p) => p.category === c)
       .map((p) => tile(p, 0))
       .join('')}</div></section>`,
@@ -129,6 +145,32 @@ const notFound = renderPage({
   main: `<h1>페이지를 찾을 수 없습니다</h1><p class="lead">주소가 바뀌었거나 삭제된 페이지입니다.</p><div class="tiles">${pages.map((p) => tile(p, 0)).join('')}</div>`,
 }).replaceAll('href="./', `href="${site.basePath}`);
 await emit('404.html', notFound);
+
+// PWA: 매니페스트와 서비스 워커(빌드마다 캐시 버전이 바뀐다)
+await emit(
+  'manifest.webmanifest',
+  JSON.stringify(
+    {
+      name: `${site.name} — ${site.tagline}`,
+      short_name: site.name,
+      lang: 'ko',
+      start_url: './',
+      scope: './',
+      display: 'standalone',
+      background_color: '#f7f7fb',
+      theme_color: '#5b4bff',
+      icons: [
+        { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    },
+    null,
+    2,
+  ),
+);
+const swSource = await readFile(join(root, 'src/sw.js'), 'utf8');
+await emit('sw.js', swSource.replace('__VERSION__', Date.now().toString(36)));
 
 // sitemap, robots, ads.txt
 const urls = ['', ...pages.map((p) => `${p.slug}/`), ...infoPages.map((p) => `${p.slug}/`)];

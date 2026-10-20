@@ -1,3 +1,4 @@
+import { freelancerPages } from './pages-freelancer.js';
 import { calculator, money, number, date, segmented, select, checkbox, table } from './ui.js';
 import { calcSalary, RATES } from './calc/salary.js';
 import { MIN_WAGE } from './calc/wage.js';
@@ -481,3 +482,6 @@ ${table(['연봉', '국민연금', '건강+장기요양', '고용보험', '소�
 }
 
 pages.splice(1, 0, salaryTablePage());
+
+// 앱의 주 기능(프리랜서·N잡)을 맨 앞에 둔다.
+pages.unshift(...freelancerPages);

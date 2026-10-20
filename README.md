@@ -1,9 +1,19 @@
-# 머니계산기
+# 프리셈
 
-2026년 기준 한국 금융 계산기 모음 정적 사이트입니다. 검색 유입 → 광고(애드센스) 수익을 목표로 합니다.
-작업 원칙은 [RULES.md](RULES.md), 벤치마킹 근거는 [docs/benchmark.md](docs/benchmark.md)에 있습니다.
+3.3% 떼이는 **프리랜서·N잡러를 위한 세금·보험 계산 앱**입니다. 모바일 우선 PWA(홈 화면 설치, 오프라인 동작)이며
+검색 유입 → 광고 수익을 목표로 합니다. 작업 원칙은 [RULES.md](RULES.md), 벤치마킹 근거는 [docs/benchmark.md](docs/benchmark.md)에 있습니다.
 
-## 계산기
+## 주 기능 (프리랜서·N잡)
+
+| 경로 | 내용 | 근거 |
+|---|---|---|
+| `/freelancer-33/` | 3.3% 세전↔실수령 역산, 소액부징수 | 소득세법 |
+| `/income-tax-refund/` | 5월 종합소득세 환급·추가납부 추정, 단순/기준경비율 자동 판정, 2.8·3.4배 상한 | 시행령 제143조, 시행규칙 제67조 |
+| `/dependent/` | 건강보험 피부양자 유지 여부와 남은 여유 소득 | 피부양자 소득·재산 요건 |
+
+업종별 경비율(`INDUSTRY_PRESETS`)은 매년 국세청 고시로 바뀌는 참고값이며 화면에서 수정할 수 있습니다.
+
+## 기타 계산기
 
 | 경로 | 내용 | 기준 |
 |---|---|---|
@@ -46,11 +56,26 @@ npm test
 `main`에 푸시되면 `.github/workflows/site.yml`이 테스트 후 GitHub Pages로 배포합니다.
 처음 한 번 저장소 **Settings → Pages → Source: GitHub Actions** 를 선택해야 합니다.
 
+### 커스텀 도메인 (www.kmoney-calc.com)
+
+1. 도메인 등록업체 DNS에 다음을 추가합니다.
+
+   | 타입 | 이름 | 값 |
+   |---|---|---|
+   | A | `@` | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` (4개) |
+   | AAAA | `@` | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` (4개) |
+   | CNAME | `www` | `pinchpeach.github.io` |
+
+2. **Settings → Pages → Custom domain** 에 `www.kmoney-calc.com` 입력 → DNS 확인 후 **Enforce HTTPS** 체크.
+   A/AAAA 레코드가 있으면 `kmoney-calc.com`(www 없음)은 GitHub가 www 주소로 자동 연결합니다.
+3. 저장소 변수 `SITE_URL` = `https://www.kmoney-calc.com` 설정 후 Actions에서 Site 워크플로를 다시 실행합니다.
+4. (권장) GitHub 계정 **Settings → Pages → Add a domain** 에서 도메인 소유권을 인증해 도메인 탈취를 막습니다.
+
 선택 설정은 **Settings → Secrets and variables → Actions → Variables** 에 넣습니다. 비어 있으면 해당 기능은 꺼집니다.
 
 | 변수 | 용도 |
 |---|---|
-| `SITE_URL` | 커스텀 도메인 (예: `https://moneycalc.kr`). 없으면 GitHub Pages 주소 |
+| `SITE_URL` | 커스텀 도메인 (예: `https://www.kmoney-calc.com`). 없으면 GitHub Pages 주소 |
 | `ADSENSE_CLIENT` | 애드센스 게시자 ID `ca-pub-…` — 설정 시 광고 코드와 `ads.txt` 생성 |
 | `GA_ID` | Google Analytics 4 측정 ID |
 | `GSC_VERIFY`, `NAVER_VERIFY` | 구글 서치콘솔·네이버 서치어드바이저 소유권 확인 값 |

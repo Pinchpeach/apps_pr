@@ -27,7 +27,11 @@ function head({ title, description, path, depth, jsonLd = [] }) {
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#5b4bff">
+<link rel="manifest" href="${r}manifest.webmanifest">
+<link rel="apple-touch-icon" href="${r}icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="${site.name}">
 ${site.googleVerify ? `<meta name="google-site-verification" content="${esc(site.googleVerify)}">` : ''}
 ${site.naverVerify ? `<meta name="naver-site-verification" content="${esc(site.naverVerify)}">` : ''}
 <link rel="icon" href="${r}favicon.svg" type="image/svg+xml">
@@ -57,7 +61,7 @@ function header(depth, nav) {
   const r = rel(depth);
   return `<header class="site-header">
   <a class="brand" href="${r}">${site.name}</a>
-  <nav aria-label="주요 계산기">${nav.map((p) => `<a href="${r}${p.slug}/">${esc(p.h1.replace(/ ?\(.*\)$/, ''))}</a>`).join('')}</nav>
+  <nav aria-label="주요 계산기">${nav.map((p) => `<a href="${r}${p.slug}/">${esc(p.short ?? p.h1)}</a>`).join('')}<a href="${r}#all">전체 계산기</a></nav>
 </header>`;
 }
 
@@ -69,6 +73,17 @@ function footer(depth) {
 </footer>`;
 }
 
+/** 모바일 하단 탭바: 주 기능 + 홈 */
+function tabBar(depth, nav, path) {
+  const r = rel(depth);
+  const items = [{ href: r, icon: '🏠', label: '홈', active: path === '' }].concat(
+    nav.map((p) => ({ href: `${r}${p.slug}/`, icon: p.icon, label: p.short ?? p.h1, active: path === `${p.slug}/` })),
+  );
+  return `<nav class="tabbar" aria-label="앱 메뉴">${items
+    .map((i) => `<a href="${i.href}"${i.active ? ' aria-current="page"' : ''}><span aria-hidden="true">${i.icon}</span>${esc(i.label)}</a>`)
+    .join('')}</nav>`;
+}
+
 export function renderPage({ title, description, path, depth, jsonLd, nav, main, scripts = [] }) {
   return `${head({ title, description, path, depth, jsonLd })}
 <body>
@@ -77,7 +92,9 @@ ${header(depth, nav)}
 ${main}
 </main>
 ${footer(depth)}
+${tabBar(depth, nav, path)}
 ${scripts.map((s) => `<script type="module" src="${rel(depth)}${s}"></script>`).join('\n')}
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('${rel(depth)}sw.js').catch(()=>{}));</script>
 </body>
 </html>
 `;
