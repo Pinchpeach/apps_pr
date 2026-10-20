@@ -23,3 +23,16 @@ jobs:
       # 실제 앱 번들이 만들어지는지 확인 (네이티브 빌드는 EAS에서)
       - run: npx expo export --platform android --output-dir /tmp/export-android
       - run: npx expo export --platform ios --output-dir /tmp/export-ios
+
+  # 화면 회귀 테스트: 웹 export를 실제 브라우저로 열어 각 탭 렌더링과 계산 결과를 확인
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

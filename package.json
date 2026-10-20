@@ -1,6 +1,6 @@
 {
   "name": "freesem",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "test": "node --test",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test:e2e": "expo export --platform web --output-dir dist-web && node --test e2e/*.e2e.mjs"
   },
   "dependencies": {
     "expo": "~58.0.16",
@@ -32,6 +33,7 @@
     "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
+    "playwright": "^1.56.1",
     "typescript": "~6.0.3"
   }
 }

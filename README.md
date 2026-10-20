@@ -30,6 +30,8 @@
 npm install
 npm test            # 계산 엔진 테스트
 npm run typecheck   # TypeScript 검사
+npm run lint        # ESLint
+npm run test:e2e    # 화면 회귀 테스트 (웹 export + Playwright)
 npx expo start      # Expo Go 또는 에뮬레이터에서 실행
 ```
 
