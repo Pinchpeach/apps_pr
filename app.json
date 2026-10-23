@@ -3,7 +3,7 @@
     "name": "프리셈",
     "slug": "freesem",
     "scheme": "freesem",
-    "version": "1.6.1",
+    "version": "0.1.0b",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "version": "0.1.0",
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.pinchpeach.freesem",
@@ -22,7 +24,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
