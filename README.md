@@ -48,4 +48,17 @@ npx eas-cli@latest submit --platform android                      # Play Console
 ```
 
 - Android 패키지명 / iOS 번들 ID: `com.pinchpeach.freesem` (출시 후 변경 불가)
+
+### 로컬에서 Android APK 빌드 (EAS 없이)
+
+JDK 17 이상과 Android SDK(Platform 37, Build-Tools 37.0.0, NDK 27.1.12297006, CMake 3.22.1)가 필요합니다.
+
+```bash
+npx expo prebuild --platform android --no-install   # android/ 생성 (커밋하지 않음)
+echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
+# → android/app/build/outputs/apk/release/app-release.apk
+```
+
+이렇게 만든 APK는 **디버그 키로 서명**되어 직접 설치·테스트용입니다. 스토어 출시는 EAS 빌드(자격 증명 자동 관리) 또는 별도 업로드 키를 쓰세요.
 - Play 스토어 출시에는 Google Play 개발자 계정(1회 $25)이, iOS에는 Apple Developer Program(연 $99)이 필요합니다.
